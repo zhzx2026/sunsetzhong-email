@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "dev.indevs.sunsetzhong.email.app-mergeDebugResources-65:/values-v23/values-v23.xml",
+            "map": [
+                {
+                    "source": "/Users/zhong/.gradle/caches/8.9/transforms/05b3c085415b4d7a967cbeea26833ca6/transformed/work-runtime-2.10.0/res/values-v23/values-v23.xml",
+                    "from": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,121",
+                        "endColumns": "65,62",
+                        "endOffsets": "116,179"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="S-MAIL">
+<meta name="theme-color" content="#2563eb">
+<link rel="manifest" href="/manifest.json">
+<title>Sunsetzhong Email</title>
+<style>
+:root{--bg:#f8fafc;--panel:#fff;--text:#0f172a;--muted:#64748b;--blue:#2563eb;--blue-lt:#eff6ff;--hover:#f1f5f9;--border:#e2e8f0;--font:"Google Sans","PingFang SC",system-ui,sans-serif;--radius:10px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh;display:flex;overflow:hidden;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+
+/* Mobile hamburger — inline in toolbar, hidden on desktop */
+.menu-btn{display:none;width:36px;height:36px;border:none;border-radius:10px;background:none;font-size:20px;cursor:pointer;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0;transition:all .15s}
+.menu-btn:hover{background:var(--hover);color:var(--text)}
+
+/* Sidebar */
+.sidebar{width:280px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:40;transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.side-logo{display:flex;align-items:center;gap:10px;padding:20px 24px 12px;font-size:20px;font-weight:600;letter-spacing:-.3px}
+.side-logo .dot{width:28px;height:28px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700}
+.btn-compose{margin:8px 16px 16px;padding:14px 20px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);font-family:var(--font);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.15s}
+.btn-compose:hover{background:#1d4ed8;box-shadow:0 4px 12px rgba(37,99,235,.25)}
+.nav{padding:0 8px;flex:1;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 16px;margin:1px 8px;border-radius:var(--radius);font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .12s;user-select:none}
+.nav-item:hover{background:var(--hover)}.nav-item.active{background:var(--blue-lt);color:var(--blue)}
+.nav-item svg{width:20px;height:20px;opacity:.7;flex-shrink:0}.nav-item.active svg{opacity:1}
+.nav-count{margin-left:auto;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--hover);min-width:24px;text-align:center}
+.nav-item.active .nav-count{background:#dbeafe}
+.side-foot{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;font-size:13px}
+.side-foot .av{width:32px;height:32px;border-radius:8px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600}
+.side-foot .info{flex:1;min-width:0}.side-foot .nm{font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.side-foot .rl{font-size:11px;color:var(--muted)}
+.btn-sm{background:none;border:none;cursor:pointer;color:var(--muted);padding:4px 8px;border-radius:6px;font-size:12px;transition:.1s}
+.btn-sm:hover{background:var(--hover);color:var(--text)}
+.switch{position:relative;width:48px;height:28px;cursor:pointer;display:inline-block}
+.switch input{opacity:0;width:0;height:0}
+.switch .sl{position:absolute;inset:0;background:var(--border);border-radius:14px;transition:.2s}
+.switch input:checked+.sl{background:var(--blue)}
+.switch .kn{position:absolute;top:3px;left:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:.2s}
+.switch input:checked~.kn{left:23px}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg)}
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column-reverse;gap:10px;pointer-events:none;max-width:380px}
+.toast{display:flex;align-items:flex-start;gap:10px;padding:14px 18px;border-radius:14px;font-size:14px;line-height:1.4;color:#fff;pointer-events:all;box-shadow:0 8px 32px rgba(0,0,0,.18);animation:toastIn .4s cubic-bezier(.34,1.56,.64,1);cursor:pointer;transition:opacity .25s,transform .25s}
+.toast.fade-out{opacity:0;transform:translateX(40px)}
+.toast .t-icon{font-size:20px;flex-shrink:0;line-height:1}.toast .t-body{flex:1;min-width:0}.toast .t-title{font-weight:600;margin-bottom:2px}.toast .t-text{font-size:13px;opacity:.9}
+.toast.ok{background:#059669}.toast.err{background:#dc2626}.toast.info{background:var(--blue)}
+@keyframes toastIn{from{opacity:0;transform:translateX(60px) scale(.9)}to{opacity:1;transform:translateX(0) scale(1)}}
+.update-bar{position:fixed;top:0;left:0;right:0;z-index:201;background:var(--blue);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,.1);transform:translateY(-100%);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.update-bar.show{transform:translateY(0)}.update-bar .msg{flex:1;font-weight:500}
+
+/* List */
+.view{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.toolbar{display:flex;align-items:center;gap:10px;padding:12px 20px;background:var(--panel);border-bottom:1px solid var(--border);min-height:56px}
+.toolbar h2{font-size:17px;font-weight:600;white-space:nowrap}
+.toolbar .cnt{font-size:13px;color:var(--muted);white-space:nowrap;min-width:32px}
+.spacer{flex:1}
+.btn-icon{width:34px;height:34px;border:none;background:none;border-radius:8px;cursor:pointer;font-size:16px;color:var(--muted);display:flex;align-items:center;justify-content:center;transition:.1s;flex-shrink:0}
+.btn-icon:hover{background:var(--hover);color:var(--text)}.btn-icon.danger:hover{background:#fee2e2;color:#dc2626}
+.list{flex:1;overflow-y:auto;background:var(--panel)}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--muted);gap:12px}.empty-icon{font-size:48px;opacity:.35}
+.mail-row{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .08s;position:relative;user-select:none;-webkit-user-select:none}
+.mail-row:hover{background:var(--hover)}
+.mail-row.selected{background:var(--blue-lt)}
+.mail-row .cb{width:20px;height:20px;border-radius:6px;border:2px solid var(--border);flex-shrink:0;display:none;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.mail-row .cb.checked{background:var(--blue);border-color:var(--blue)}
+.mail-row .cb.checked::after{content:'';width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg);margin-top:-1px}
+@media(min-width:721px){.mail-row .cb{display:flex}}
+.mail-row:active{background:var(--hover)}
+.batch-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:50;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:10px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.12);font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+.batch-bar.show{opacity:1;pointer-events:all;transform:translateX(-50%) translateY(0)}
+.batch-bar .count{font-weight:600;color:var(--blue)}
+.avatar{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0;text-transform:uppercase}
+.mail-content{flex:1;min-width:0}.mail-line{display:flex;align-items:baseline;gap:12px}
+.mail-from{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.mail-subj{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.mail-snip{color:var(--muted);font-weight:400}.mail-time{font-size:12px;color:var(--muted);flex-shrink:0;width:48px;text-align:right}
+.loading{display:flex;align-items:center;justify-content:center;padding:48px;color:var(--muted);gap:10px;font-size:14px}
+.spin{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Detail */
+.detail{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--panel)}
+.detail-hd{padding:20px 20px;border-bottom:1px solid var(--border)}
+.detail-subj{font-size:22px;font-weight:600;margin-bottom:14px;line-height:1.3}
+.detail-meta{display:flex;align-items:center;gap:12px}
+.detail-body{flex:1;overflow-y:auto;padding:20px;font-size:15px;line-height:1.8}
+.detail-body iframe{width:100%;border:none;min-height:400px}
+.detail-body pre{white-space:pre-wrap;font-family:var(--font);font-size:15px;line-height:1.8}
+
+/* Compose */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.4);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--panel);border-radius:14px;width:580px;max-width:calc(100vw-32px);max-height:calc(100vh-64px);display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.18);transform:translateY(16px) scale(.98);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.overlay.open .modal{transform:none}
+.modal-head{display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);font-size:15px;font-weight:600}
+.field{display:flex;align-items:flex-start;gap:8px;padding:12px 20px;border-bottom:1px solid var(--border)}
+.field label{width:56px;font-size:13px;color:var(--muted);padding-top:2px;flex-shrink:0}
+.field input,.field textarea,.field select{flex:1;border:none;outline:none;font-family:var(--font);font-size:14px;color:var(--text);background:none;resize:none}
+.field textarea{min-height:220px}
+.field select{cursor:pointer}
+.modal-foot{padding:12px 20px;display:flex;gap:8px}
+.btn-primary{padding:10px 20px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+.btn-primary:hover:not(:disabled){background:#1d4ed8}.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-ghost{padding:10px 16px;background:var(--hover);color:var(--muted);border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer}
+.btn-ghost:hover{background:var(--border)}
+
+/* Contacts dropdown */
+.contact-dd{position:absolute;top:100%;left:64px;right:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:180px;overflow-y:auto;z-index:20;display:none}
+.contact-dd.show{display:block}
+.contact-itm{padding:10px 14px;font-size:14px;cursor:pointer}.contact-itm:hover{background:var(--hover)}
+
+.panel-inner{padding:20px}
+.panel-inner h3{font-size:16px;font-weight:600;margin-bottom:16px}
+.addr-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);border-radius:8px;margin-bottom:8px;font-size:14px;font-family:monospace}
+
+/* Settings form */
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;gap:12px}
+.setting-row span{font-size:14px}
+.setting-row select,.setting-row input[type=color]{border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-family:var(--font);font-size:14px;outline:none;background:var(--panel)}
+.setting-row input[type=color]{width:40px;height:36px;padding:2px;cursor:pointer}
+
+/* Sidebar overlay on mobile */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.35);z-index:39;backdrop-filter:blur(2px);transition:opacity .3s;opacity:0}
+.sidebar-overlay.visible{display:block;opacity:1}
+
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+
+@media(max-width:720px){
+  .menu-btn{display:flex}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;padding-top:env(safe-area-inset-top,0px);transform:translateX(-100%);box-shadow:8px 0 32px rgba(0,0,0,.15);border-radius:0 20px 20px 0;z-index:40}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-overlay{z-index:39}
+  .toolbar{padding:10px 14px;gap:8px}
+  .toolbar h2{font-size:15px}
+  .mail-from{max-width:100px}
+  .mail-line{flex-wrap:wrap}
+  .mail-row{padding:12px 14px}
+  .detail-hd{padding:14px}
+  .detail-body{padding:14px}
+  .panel-inner{padding:14px}
+}
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="side-logo"><div class="dot">S</div>邮箱</div>
+  <button class="btn-compose" id="btnCompose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>新邮件</button>
+  <nav class="nav" onclick="mobileNav()">
+    <div class="nav-item active" data-folder="inbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>收件箱<span class="nav-count" id="inboxCount">—</span></div>
+    <div class="nav-item" data-folder="sent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>已发送<span class="nav-count" id="sentCount">—</span></div>
+    <div class="nav-item" data-folder="addresses"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>临时地址</div>
+    <div class="nav-item" data-folder="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>设置</div>
+    <div class="nav-item" data-folder="dingtalk" id="navDingtalk" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>视频</div>
+    <div class="nav-item" data-folder="admin" id="navAdmin" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>管理</div>
+  </nav>
+  <div class="side-foot">
+    <div class="av" id="userAv">?</div>
+    <div class="info"><div class="nm" id="userNm">—</div><div class="rl" id="userRl">—</div></div>
+    <button class="btn-sm" id="btnLogout" title="退出">←</button>
+  </div>
+  <a href="/app.apk" class="btn-compose" style="margin:8px 16px 12px;text-decoration:none;background:var(--hover);color:var(--text);justify-content:center;gap:6px">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>下载 App
+  </a>
+</aside>
+
+<div class="main" id="main"></div>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head" id="modalTitle">新邮件</div>
+    <div class="field"><label>发件人</label><select id="cFrom" style="flex:1;border:none;outline:none;font-family:var(--font);font-size:14px;background:none;cursor:pointer"></select></div>
+    <div class="field" style="position:relative"><label>收件人</label><input id="cTo" autocomplete="off" placeholder="收件人邮箱" /><div class="contact-dd" id="contactDD"></div></div>
+    <div class="field"><label>主题</label><input id="cSubject" placeholder="主题" /></div>
+    <div class="field"><label>正文</label><textarea id="cBody" placeholder="支持 HTML…"></textarea></div>
+    <div class="modal-foot"><button class="btn-primary" id="btnSend">发送</button><button class="btn-ghost" id="btnCancel">取消</button></div>
+  </div>
+</div>
+
+<script>
+function toggleSidebar(){const s=document.getElementById('sidebar');const o=document.getElementById('sidebarOverlay');s.classList.toggle('open');o.classList.toggle('visible')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('visible')}
+function mobileNav(){if(window.innerWidth<=720)closeSidebar()}
+</script>
+
+<script>
+(async ()=>{
+  const COLS=['#2563eb','#dc2626','#059669','#7c3aed','#ea580c','#0891b2','#db2777','#4f46e5'];
+  let user=null, folder='inbox', cache={}, detailMail=null, contacts=[], myAddrs=[], pollTimer=null, pollMs=1000, selectedIds=new Set(), selectAllOn=false;
+  // Theme & lang
+  let themeHue=parseInt(localStorage.getItem('theme')||'221');
+  let lang=localStorage.getItem('lang')||'zh-CN';
+  const i18nZh={inbox:'收件箱',sent:'已发送',compose:'新邮件',reply:'回复',settings:'设置',admin:'管理',addrs:'临时邮箱地址',video:'视频',empty_inbox:'收件箱为空',empty_sent:'已发送为空',no_addrs:'还没有临时地址',send:'发送',cancel:'取消',save:'保存',del:'删除',refresh:'刷新',logout:'退出',password:'修改密码',old_pw:'当前密码',new_pw:'新密码 (至少4位)',pw_ok:'密码已修改',download:'下载 App',offline:'无网络连接',new_version:'新版本可用',checking:'检查中…',back:'返回',menu:'菜单',count:' 封',countAddr:' 个',nosubject:'无主题',to_label:'发至',deleted:'已删除',delete_failed:'删除失败',delete_confirm:'删除？',delete_addr_confirm:'删除此地址？',saved:'已保存',save_failed:'保存失败',selected_count:'已选择',load_failed:'加载失败',change_failed:'修改失败',fill_all:'请填写完整',fill_recipient:'请填写收件人',fill_subject:'请填写主题',theme_color:'主题色',hue_label:'色相',lang_label:'界面语言',lang_saved:'已保存，刷新后生效',sys_settings:'系统设置',total_users:'用户总数',max_addrs:'每人最多临时地址数',unlimited:'-1 = 无限制',poll_ms_label:'自动刷新间隔 (毫秒)',send_ok:'发送成功',send_fail:'发送失败',sending:'发送中…',create_addr:'创建临时地址',create:'创建',created:'已创建：',create_failed:'创建失败',no_content:'（无内容）',addr_hint:'点 ＋ 创建，可用于收发邮件',need_admin:'需要管理员权限',from_label:'发件人',contact_to:'收件人',subject_label:'主题',body_label:'正文',to_ph:'收件人邮箱',subject_ph:'主题',html_ph:'支持 HTML…',app_name:'临时邮箱',notify_mail_suffix:' 封新邮件',notify_mail_single:'新邮件',notify_mail_body:'您有新邮件',update_ready:'新版本已就绪',video_enable:'视频状态',dt_off:'关闭',dt_hidden:'无入口',dt_visible:'显示入口'};
+  const i18nEn={inbox:'Inbox',sent:'Sent',compose:'Compose',reply:'Reply',settings:'Settings',admin:'Admin',addrs:'Addresses',video:'Video',empty_inbox:'Inbox is empty',empty_sent:'Sent is empty',no_addrs:'No addresses yet',send:'Send',cancel:'Cancel',save:'Save',del:'Delete',refresh:'Refresh',logout:'Logout',password:'Change Password',old_pw:'Current password',new_pw:'New password (min 4 chars)',pw_ok:'Password changed',download:'Download App',offline:'No network',new_version:'New version available',checking:'Checking…',back:'Back',menu:'Menu',count:' msgs',countAddr:'',nosubject:'No subject',to_label:'To',deleted:'Deleted',delete_failed:'Delete failed',delete_confirm:'Delete?',delete_addr_confirm:'Delete this address?',saved:'Saved',save_failed:'Save failed',selected_count:'Selected',load_failed:'Load failed',change_failed:'Change failed',fill_all:'Please fill in all fields',fill_recipient:'Please fill in recipient',fill_subject:'Please fill in subject',theme_color:'Theme Color',hue_label:'Hue',lang_label:'Language',lang_saved:'Saved, refresh to apply',sys_settings:'System Settings',total_users:'Total users',max_addrs:'Max temp addresses per user',unlimited:'-1 = Unlimited',poll_ms_label:'Auto-refresh interval (ms)',send_ok:'Sent',send_fail:'Send failed',sending:'Sending…',create_addr:'Create temp address',create:'Create',created:'Created: ',create_failed:'Create failed',no_content:'(No content)',addr_hint:'Tap ＋ to create a temp address',need_admin:'Admin required',from_label:'From',contact_to:'To',subject_label:'Subject',body_label:'Body',to_ph:'Recipient email',subject_ph:'Subject',html_ph:'Supports HTML…',app_name:'Temp Mail',notify_mail_suffix:' new mails',notify_mail_single:'New mail',notify_mail_body:'You have new mail',update_ready:'New version ready',video_enable:'Video Status',dt_off:'Off',dt_hidden:'No Entry',dt_visible:'Visible Entry'};
+  function t(s){const d=lang==='en'?i18nEn:i18nZh;return d[s]||s}
+  const btnMenu='<button class="menu-btn" onclick="event.stopPropagation();toggleSidebar()" title="'+t('menu')+'"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg></button>';
+
+  const main=document.getElementById('main'),taC=document.getElementById('toastContainer');
+  function tmsg(m,ok=true,warn=false){const el=document.createElement('div');const k=warn?'info':ok?'ok':'err';const icons={ok:'✓',err:'✕',info:'✉'};const titles={ok:'成功',err:'错误',info:'新邮件'};el.className='toast '+k;el.innerHTML='<span class="t-icon">'+icons[k]+'</span><div class="t-body"><div class="t-title">'+titles[k]+'</div><div class="t-text">'+esc(m)+'</div></div>';el.onclick=()=>{el.classList.add('fade-out');setTimeout(()=>{if(el.parentNode)el.parentNode.removeChild(el)},300)};taC.appendChild(el);const tm=setTimeout(()=>{el.classList.add('fade-out');setTimeout(()=>{if(el.parentNode)el.parentNode.removeChild(el)},300)},4000);el._t=tm}
+  function color(s){let h=0;for(let i=0;i<(s||'').length;i++)h=((h<<5)-h+s.charCodeAt(i))|0;return COLS[Math.abs(h)%COLS.length]}
+  function av(s){return((s||'?').split('@')[0]||'?')[0].toUpperCase()}
+  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  function ts(iso){if(!iso)return'';const d=new Date(iso),n=new Date();if(d.toDateString()===n.toDateString())return d.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false});return(d.getMonth()+1)+'/'+d.getDate()}
+  function snip(t){return(t||'').replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim().slice(0,80)}
+
+  // Update hardcoded UI text for current language
+  function localizeUI(){
+    document.querySelectorAll('.nav-item').forEach(el=>{
+      const f=el.dataset.folder;
+      const map={inbox:t('inbox'),sent:t('sent'),addresses:t('addrs'),settings:t('settings'),admin:t('admin'),dingtalk:t('video')};
+      if(map[f]){const tNode=Array.from(el.childNodes).find(n=>n.nodeType===3&&n.textContent.trim());if(tNode)tNode.textContent=map[f]}
+    });
+    const cb=document.getElementById('btnCompose'); if(cb){const tn=Array.from(cb.childNodes).find(n=>n.nodeType===3&&n.textContent.trim());if(tn)tn.textContent=t('compose')}
+    document.getElementById('btnLogout')?.setAttribute('title',t('logout'));
+    const dl=document.querySelector('#sidebar a.btn-compose'); if(dl){const tn=Array.from(dl.childNodes).find(n=>n.nodeType===3&&n.textContent.trim());if(tn)tn.textContent=t('download')}
+    const labels=document.querySelectorAll('#overlay .field label');
+    if(labels[0])labels[0].textContent=t('from_label');
+    if(labels[1])labels[1].textContent=t('contact_to');
+    if(labels[2])labels[2].textContent=t('subject_label');
+    if(labels[3])labels[3].textContent=t('body_label');
+    document.getElementById('cTo')?.setAttribute('placeholder',t('to_ph'));
+    document.getElementById('cSubject')?.setAttribute('placeholder',t('subject_ph'));
+    document.getElementById('cBody')?.setAttribute('placeholder',t('html_ph'));
+    const bs=document.getElementById('btnSend'); if(bs)bs.textContent=t('send');
+    const bc=document.getElementById('btnCancel'); if(bc)bc.textContent=t('cancel');
+  }
+
+  // Apply theme - proper HSL math
+  function applyTheme(h){
+    themeHue=h; document.documentElement.style.setProperty('--blue',`hsl(${h},80%,50%)`);
+    document.documentElement.style.setProperty('--blue-lt',`hsla(${h},80%,50%,.08)`);
+    document.querySelector('meta[name=theme-color]').content=`hsl(${h},80%,45%)`;
+    localStorage.setItem('theme',h);
+  }
+  applyTheme(themeHue);
+
+  // Proper HSL↔Hex conversion (no canvas trickery)
+  function hslToHex(h){
+    const s=0.8,l=0.5; const c=(1-Math.abs(2*l-1))*s; const x=c*(1-Math.abs((h/60)%2-1)); const m=l-c/2;
+    let r=0,g=0,b=0;
+    if(h<60){r=c;g=x}else if(h<120){r=x;g=c}else if(h<180){g=c;b=x}else if(h<240){g=x;b=c}else if(h<300){r=x;b=c}else{r=c;b=x}
+    const toHex=v=>Math.round((v+m)*255).toString(16).padStart(2,'0');
+    return '#'+toHex(r)+toHex(g)+toHex(b);
+  }
+  function parseHue(hex){
+    const s=hex.replace('#','');
+    const r=parseInt(s.slice(0,2),16)/255,g=parseInt(s.slice(2,4),16)/255,b=parseInt(s.slice(4,6),16)/255;
+    const max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min;
+    if(d===0)return 0;
+    let h=0;
+    if(max===r)h=((g-b)/d)%6;else if(max===g)h=(b-r)/d+2;else h=(r-g)/d+4;
+    return Math.round(h*60+(h<0?360:0));
+  }
+  window.parseHue=parseHue;
+
+  // Auth
+  const isAndroidApp = typeof window.__isAndroidApp !== 'undefined' && window.__isAndroidApp;
+  function showOffline(){
+    main.innerHTML='<div class="view"><div class="empty" style="padding-top:60px"><div class="empty-icon">📡</div><p>'+t('offline')+'</p><p style="font-size:13px;color:var(--muted);margin-top:8px">检查网络连接后重试</p><button class="btn-primary" onclick="location.reload()" style="margin-top:18px;padding:10px 28px">'+t('refresh')+'</button></div></div>';
+  }
+  try{const r=await fetch('/api/auth/me'),d=await r.json();if(!d.ok||!d.user){location.href='/login';return}user=d.user}catch{showOffline();return}
+  document.getElementById('userAv').textContent=user.username[0].toUpperCase();
+  document.getElementById('userNm').textContent=user.username;
+  document.getElementById('userRl').textContent=user.role;
+  if(user.role==='admin') document.getElementById('navAdmin').style.display='';
+  // Show DingTalk nav if enabled
+  try{const pr=await fetch('/api/settings/public'),pd=await pr.json();if(pd.settings?.dingtalk_enabled==='visible')document.getElementById('navDingtalk').style.display='';if(pd.settings?.poll_ms){const v=parseInt(pd.settings.poll_ms);if(v>=200&&v<=30000)pollMs=v}}catch{}
+  document.getElementById('btnLogout').onclick=async()=>{stopPoll();await fetch('/api/auth/logout',{method:'POST'});location.href='/login'};
+
+  // Setup device key for Android background service
+  if(isAndroidApp && typeof window.__smailSetDeviceKey === 'function'){
+    try{const r=await fetch('/api/auth/device-key',{method:'POST'});const d=await r.json();if(d.ok&&d.token)window.__smailSetDeviceKey(d.token)}catch{}
+  }
+
+  // Load my addresses + contacts + settings
+  async function loadAddrs(){
+    try{const r=await fetch('/api/addresses'),d=await r.json();myAddrs=[user.username+'@sunsetzhong.indevs.in',...((d.items||[]).map(a=>a.full_address))]}catch{}
+    const sel=document.getElementById('cFrom');
+    if(sel) sel.innerHTML=myAddrs.map(a=>'<option value="'+esc(a)+'">'+esc(a)+'</option>').join('');
+  }
+  async function loadContacts(){try{const r=await fetch('/api/contacts'),d=await r.json();contacts=d.contacts||[]}catch{}}
+  loadAddrs(); loadContacts();
+
+  // Start / stop auto-refresh
+  function startPoll(){
+    stopPoll();
+    pollTimer=setInterval(async()=>{
+      if(document.getElementById('overlay').classList.contains('open'))return;
+      // Always poll inbox for badge count + notifications
+      try{const r=await fetch('/api/inbox'),d=await r.json();if(d.ok){const items=(d.items||[]).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));const oldInbox=(cache['inbox']||[]).length;cache['inbox']=items;const ce=document.getElementById('inboxCount');if(ce)ce.textContent=items.length||'—';const diff=items.length-oldInbox;if(diff>0&&oldInbox>0){tmsg(diff>1?diff+t('notify_mail_suffix'):t('notify_mail_single'),true,true);showNotification(diff>1?diff+t('notify_mail_suffix'):t('notify_mail_single'),t('notify_mail_body'))}if(items.length!==oldInbox&&!detailMail&&folder==='inbox'){main.innerHTML=rList(items);bindList();reBindToolbar()}}}catch{}
+      // Also poll sent folder if on sent page
+      if(folder==='sent'&&!detailMail){try{const r=await fetch('/api/sent'),d=await r.json();if(!d.ok)return;const items=(d.items||[]).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));const oldLen=(cache['sent']||[]).length;cache['sent']=items;const ce=document.getElementById('sentCount');if(ce)ce.textContent=items.length||'—';if(items.length!==oldLen){main.innerHTML=rList(items);bindList();reBindToolbar()}}catch{}}
+    },pollMs);
+  }
+  function stopPoll(){if(pollTimer){clearInterval(pollTimer);pollTimer=null}}
+
+  const HB=btnMenu;
+
+  function rList(mails){
+    const label=t(folder==='sent'?'sent':'inbox');
+    const selAllChecked=selectAllOn&&mails.length>0;
+    if(!mails.length) return '<div class="view"><div class="toolbar">'+HB+'<h2>'+label+'</h2><span class="cnt">&nbsp;</span><span class="spacer"></span><button class="btn-icon" id="btnRefresh" title="'+t('refresh')+'">↻</button></div><div class="empty"><div class="empty-icon">'+(folder==='sent'?'📤':'📭')+'</div><p>'+(folder==='sent'?t('empty_sent'):t('empty_inbox'))+'</p></div></div>';
+    const selAllHTML='<div class="cb'+(selAllChecked?' checked':'')+'" id="cbSelectAll" title="'+(selAllChecked?'取消全选':'全选')+'" onclick="event.stopPropagation()"></div>';
+    return '<div class="view"><div class="toolbar">'+HB+'<h2>'+label+'</h2>'+selAllHTML+'<span class="cnt">'+mails.length+t('count')+'</span><span class="spacer"></span><button class="btn-icon" id="btnRefresh" title="'+t('refresh')+'">↻</button></div><div class="list">'+mails.map(m=>{const a=folder==='sent'?(m.address||''):(m.source||'');const ck=selectedIds.has(m.id);return'<div class="mail-row'+(ck?' selected':'')+'" data-id="'+m.id+'"><div class="cb'+(ck?' checked':'')+'" data-cb="1"></div><div class="avatar" style="background:'+color(a)+'">'+esc(av(a))+'</div><div class="mail-content"><div class="mail-line"><span class="mail-from">'+esc(a)+'</span><span class="mail-subj">'+esc(m.subject||t('nosubject'))+' <span class="mail-snip">— '+esc(snip(m.body_text))+'</span></span><span class="mail-time">'+esc(ts(m.created_at))+'</span></div></div></div>'}).join('')+'</div></div>';
+  }
+
+  function rDetail(mail){
+    const a=folder==='sent'?(mail.address||''):(mail.source||'');
+    const isInbound=folder==='inbox';
+    return '<div class="detail"><div class="toolbar">'+HB+'<button class="btn-icon" id="btnBack" title="'+t('back')+'">←</button><span class="spacer"></span>'+(isInbound?'<button class="btn-icon" id="btnReply" title="'+t('reply')+'">↩</button>':'')+'<button class="btn-icon danger" id="btnDelete" title="'+t('del')+'">🗑</button></div><div class="detail-hd"><div class="detail-subj">'+esc(mail.subject||t('nosubject'))+'</div><div class="detail-meta"><div class="avatar" style="background:'+color(a)+'">'+esc(av(a))+'</div><div style="flex:1"><div style="font-weight:600;font-size:14px">'+esc(a)+'</div><div style="font-size:12px;color:var(--muted)">'+t('to_label')+' '+esc(mail.address||'')+' · '+new Date(mail.created_at).toLocaleString(lang==='en'?'en-US':'zh-CN')+'</div></div></div></div><div class="detail-body" id="detailBody"></div></div>';
+  }
+
+  function toggleSelect(id){
+    if(selectedIds.has(id)){selectedIds.delete(id);selectAllOn=false}else selectedIds.add(id);
+    if(selectedIds.size===0)selectAllOn=false;
+    main.innerHTML=rList(cache[folder]);bindList();renderBatchBar();
+  }
+  function selectAllToggle(){
+    if(selectAllOn){selectedIds.clear();selectAllOn=false}else{selectAllOn=true;(cache[folder]||[]).forEach(m=>selectedIds.add(m.id))}
+    main.innerHTML=rList(cache[folder]);bindList();renderBatchBar();
+  }
+  async function batchDelete(){
+    if(!selectedIds.size)return;
+    const msg=lang==='en'?'Delete '+selectedIds.size+' messages?':'删除 '+selectedIds.size+' 封邮件？';
+    if(!confirm(msg))return;
+    let ok=0;const ids=[...selectedIds];
+    for(const id of ids){
+      try{await fetch('/api/mail/'+id,{method:'DELETE'});ok++;selectedIds.delete(id)}catch{}
+    }
+    selectAllOn=false;tmsg(t('deleted')+' '+ok);
+    await load(folder);renderBatchBar();
+  }
+  function renderBatchBar(){
+    const old=document.getElementById('batchBar');if(old)old.remove();
+    if(!selectedIds.size)return;
+    const bar=document.createElement('div');bar.id='batchBar';bar.className='batch-bar show';
+    bar.innerHTML='<span class="count">'+selectedIds.size+'</span><span>'+t('selected_count')+'</span><button class="btn-danger" style="margin-left:8px;background:#dc2626;color:#fff;border:none;border-radius:8px;padding:8px 14px;font:inherit;font-size:13px;cursor:pointer">'+t('del')+'</button><button class="btn-ghost" style="border:1px solid var(--border);border-radius:8px;padding:8px 14px;font:inherit;font-size:13px;cursor:pointer;background:none;color:var(--text)" id="btnClearSel">'+t('cancel')+'</button>';
+    document.body.appendChild(bar);
+    bar.querySelector('.btn-danger').onclick=batchDelete;
+    bar.querySelector('#btnClearSel').onclick=()=>{selectedIds.clear();selectAllOn=false;main.innerHTML=rList(cache[folder]);bindList();renderBatchBar()};
+  }
+  function reBindToolbar(){
+    document.getElementById('btnRefresh')?.addEventListener('click',()=>load(folder));
+    document.getElementById('cbSelectAll')?.addEventListener('click',selectAllToggle);
+  }
+  function bindList(){
+    reBindToolbar();
+    let lpTimer=null,lpTarget=null,longPressed=false;
+    document.querySelectorAll('.mail-row').forEach(e=>{
+      e.addEventListener('click',ev=>{
+        if(longPressed){longPressed=false;return}
+        if(ev.target.closest('[data-cb]')){const id=e.dataset.id;if(id)toggleSelect(id);return}
+        if(selectedIds.size>0){const id=e.dataset.id;if(id)toggleSelect(id);return}
+        open(e.dataset.id);
+      });
+      e.addEventListener('touchstart',ev=>{
+        if(ev.target.closest('[data-cb]'))return;
+        lpTarget=e;lpTimer=setTimeout(()=>{
+          if(lpTarget===e){lpTimer=null;longPressed=true;const id=e.dataset.id;if(id&&confirm(t('delete_confirm')))del(id);setTimeout(()=>{longPressed=false},400)}
+        },600);
+      });
+      e.addEventListener('touchend',()=>{if(lpTimer){clearTimeout(lpTimer);lpTimer=null}lpTarget=null});
+      e.addEventListener('touchmove',()=>{if(lpTimer){clearTimeout(lpTimer);lpTimer=null}lpTarget=null});
+    });
+  }
+
+  async function load(f){
+    folder=f; detailMail=null;
+    document.querySelectorAll('.nav-item').forEach(e=>e.classList.toggle('active',e.dataset.folder===f));
+    if(f==='addresses'){await loadAddressesView();return}
+    if(f==='settings'){await loadSettings();return}
+    
+    if(f==='admin'){await loadAdmin();return}
+    if(f==='dingtalk'){location.href='/dingtalk';return}
+    const tLabel=t(f==='sent'?'sent':'inbox');
+    main.innerHTML='<div class="view"><div class="toolbar">'+HB+'<h2>'+tLabel+'</h2><span class="cnt">&nbsp;</span><span class="spacer"></span><button class="btn-icon" id="btnRefresh" title="'+t('refresh')+'">↻</button></div><div class="loading"><div class="spin"></div></div></div>';
+    reBindToolbar();
+    try{const r=await fetch('/api/'+f),d=await r.json();if(!d.ok)throw new Error(d.error);cache[f]=(d.items||[]).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));const ce=f==='inbox'?document.getElementById('inboxCount'):document.getElementById('sentCount');if(ce)ce.textContent=cache[f].length||'—';main.innerHTML=rList(cache[f]);bindList()}catch(e){main.innerHTML=rList([]);bindList();tmsg(e.message,false)}
+    loadContacts(); startPoll();
+  }
+
+  async function open(id){
+    stopPoll(); const fold=folder;
+    main.innerHTML='<div class="detail"><div class="toolbar">'+HB+'<span class="spacer"></span></div><div class="loading"><div class="spin"></div></div></div>';
+    try{const r=await fetch('/api/mail/'+id),d=await r.json();if(!d.ok||!d.data)throw new Error('not found');detailMail=d.data;main.innerHTML=rDetail(detailMail);
+      document.getElementById('btnBack').onclick=()=>{detailMail=null;load(fold)};
+      document.getElementById('btnDelete').onclick=()=>del(id);
+      const rb=document.getElementById('btnReply'); if(rb) rb.onclick=()=>reply();
+      const be=document.getElementById('detailBody');
+      if(detailMail.body_html){const ifr=document.createElement('iframe');ifr.sandbox.add('allow-same-origin');ifr.style.cssText='width:100%;border:none;min-height:400px;';be.appendChild(ifr);const doc=ifr.contentDocument||ifr.contentWindow.document;doc.open();doc.write(detailMail.body_html);doc.close();setTimeout(()=>{ifr.style.height=doc.body.scrollHeight+'px'},150)}
+      else be.innerHTML='<pre>'+esc(detailMail.body_text||t('no_content'))+'</pre>';
+    }catch(e){tmsg(t('load_failed'),false);detailMail=null;load(fold)}
+  }
+
+  async function del(id){if(!confirm(t('delete_confirm')))return;try{await fetch('/api/mail/'+id,{method:'DELETE'});tmsg(t('deleted'));load(folder)}catch{tmsg(t('delete_failed'),false)}}
+
+  function reply(){
+    if(!detailMail||folder!=='inbox') return;
+    composeOpen(user.username+'@sunsetzhong.indevs.in', detailMail.source||detailMail.address, 'Re: '+(detailMail.subject||'').replace(/^(Re:\s*)+/i,''), '\n\n\n'+(detailMail.body_text||'').split('\n').map(l=>'> '+l).join('\n'), 'reply');
+  }
+
+  function composeOpen(fromAddr, toAddr, subj, body, mode){
+    const addrs=myAddrs.length?myAddrs:[user.username+'@sunsetzhong.indevs.in'];
+    if(!fromAddr) fromAddr=addrs[0];
+    document.getElementById('cFrom').innerHTML=addrs.map(a=>'<option value="'+esc(a)+'"'+(a===fromAddr?' selected':'')+'>'+esc(a)+'</option>').join('');
+    document.getElementById('cTo').value=toAddr||'';document.getElementById('cSubject').value=subj||'';document.getElementById('cBody').value=body||'';
+    document.getElementById('modalTitle').textContent=mode==='reply'?t('reply'):t('compose');
+    document.getElementById('overlay').classList.add('open');
+    setTimeout(()=>{const el=toAddr?document.getElementById('cSubject'):document.getElementById('cTo');el.focus()},150);
+  }
+
+  const overlay=document.getElementById('overlay');
+  const elTo=document.getElementById('cTo'),elSubj=document.getElementById('cSubject'),elBody=document.getElementById('cBody'),btnSend=document.getElementById('btnSend');
+  const contactDD=document.getElementById('contactDD');
+  let composeMode='new';
+
+  elTo.addEventListener('input',()=>{
+    const v=elTo.value.trim().toLowerCase();
+    if(!v||contacts.length===0){contactDD.classList.remove('show');return}
+    const matches=contacts.filter(c=>c.toLowerCase().includes(v)&&c.toLowerCase()!==elTo.value.toLowerCase());
+    if(matches.length){
+      contactDD.innerHTML=matches.slice(0,6).map(c=>'<div class="contact-itm">'+esc(c)+'</div>').join('');
+      contactDD.classList.add('show');
+      contactDD.querySelectorAll('.contact-itm').forEach(e=>e.onclick=()=>{elTo.value=e.textContent;contactDD.classList.remove('show');elTo.focus()});
+    }else contactDD.classList.remove('show');
+  });
+  elTo.addEventListener('blur',()=>setTimeout(()=>contactDD.classList.remove('show'),200));
+
+  document.getElementById('btnCompose').onclick=async()=>{await loadAddrs();composeOpen(user.username+'@sunsetzhong.indevs.in','','','','new')};
+  document.getElementById('btnCancel').onclick=()=>overlay.classList.remove('open');
+  overlay.onclick=e=>{if(e.target===overlay)overlay.classList.remove('open')};
+  document.onkeydown=e=>{if(e.key==='Escape')overlay.classList.remove('open')};
+
+  btnSend.onclick=async()=>{
+    const from=document.getElementById('cFrom').value.trim();
+    const to=elTo.value.trim(),subject=elSubj.value.trim(),body=elBody.value.trim();
+    if(!to){elTo.focus();return tmsg(t('fill_recipient'),false)} if(!subject){elSubj.focus();return tmsg(t('fill_subject'),false)}
+    btnSend.disabled=true;btnSend.textContent=t('sending');
+    try{
+      const isHtml=/<[a-z][\s\S]*>/i.test(body);
+      const payload={from,to,subject,html:isHtml?body:'<p>'+body.replace(/\n/g,'<br>')+'</p>',text:body};
+      if(composeMode==='reply'&&detailMail){payload.in_reply_to=detailMail.message_id||'';payload.references=detailMail.message_id||''}
+      const endpoint=composeMode==='reply'?'/api/reply':'/api/send';
+      const r=await fetch(endpoint,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+      const d=await r.json(); if(!r.ok)throw new Error(d.error||t('send_fail'));
+      tmsg(t('send_ok')); overlay.classList.remove('open'); cache.sent=[]; load('sent');
+    }catch(e){tmsg(e.message,false)}finally{btnSend.disabled=false;btnSend.textContent=t('send')}
+  };
+
+  async function loadAddressesView(){
+    main.innerHTML='<div class="view"><div class="toolbar">'+HB+'<h2>'+t('addrs')+'</h2><span class="cnt">&nbsp;</span><span class="spacer"></span><button class="btn-icon" id="btnAddAddr" title="'+t('create')+'">＋</button></div><div class="loading"><div class="spin"></div></div></div>';
+    try{const r=await fetch('/api/addresses'),d=await r.json();const items=d.items||[];
+      main.innerHTML='<div class="view"><div class="toolbar">'+HB+'<h2>'+t('addrs')+'</h2><span class="cnt">'+items.length+t('countAddr')+'</span><span class="spacer"></span><button class="btn-icon" id="btnAddAddr" title="'+t('create_addr')+'">＋</button></div><div class="list"><div class="panel-inner">'+(items.length?items.map(a=>'<div class="addr-row"><span>'+esc(a.full_address)+'</span><button class="btn-sm" data-id="'+a.id+'" style="color:#dc2626;cursor:pointer">'+t('del')+'</button></div>').join(''):'<div class="empty"><p>'+t('no_addrs')+'</p><p style="font-size:12px;color:var(--muted);margin-top:8px">'+t('addr_hint')+'</p></div>')+'</div></div></div>';
+      document.getElementById('btnAddAddr')?.addEventListener('click',async()=>{
+        try{const r=await fetch('/api/addresses',{method:'POST'}),d=await r.json();if(d.ok){tmsg(t('created')+d.data.full_address);loadAddrs();load('addresses')}else tmsg(d.error,false)}catch{tmsg(t('create_failed'),false)}
+      });
+      document.querySelectorAll('[data-id]').forEach(b=>b.addEventListener('click',async()=>{
+        if(!confirm(t('delete_addr_confirm')))return;
+        try{await fetch('/api/addresses/'+b.dataset.id,{method:'DELETE'});tmsg(t('deleted'));loadAddrs();load('addresses')}catch{tmsg(t('delete_failed'),false)}
+      }));
+    }catch{tmsg(t('load_failed'),false)}
+  }
+
+  async function loadSettings(){
+    stopPoll();
+    main.innerHTML='<div class="view"><div class="toolbar">'+HB+'<h2>'+t('settings')+'</h2></div><div class="list"><div class="panel-inner">'+
+      '<h3>'+t('password')+'</h3>'+
+      '<div style="display:flex;flex-direction:column;gap:8px;max-width:360px;margin-bottom:28px">'+
+      '<input id="pOld" type="password" placeholder="'+t('old_pw')+'" style="width:100%;border:1px solid var(--border);border-radius:10px;padding:12px 14px;font:inherit;font-size:14px;outline:none">'+
+      '<input id="pNew" type="password" placeholder="'+t('new_pw')+'" style="width:100%;border:1px solid var(--border);border-radius:10px;padding:12px 14px;font:inherit;font-size:14px;outline:none">'+
+      '<button id="btnPw" class="btn-primary" style="width:auto">'+t('password')+'</button></div>'+
+      '<h3>'+t('theme_color')+'</h3>'+
+      '<div class="setting-row"><span>'+t('hue_label')+'</span><input type="color" id="themeColor" value="'+hslToHex(themeHue)+'" onchange="document.__applyTheme(parseHue(this.value))"></div>'+
+      '<h3 style="margin-top:20px">'+t('lang_label')+'</h3>'+
+      '<div class="setting-row"><span>'+t('lang_label')+'</span><select id="langSel"><option value="zh-CN"'+(lang==='zh-CN'?' selected':'')+'>中文</option><option value="en"'+(lang==='en'?' selected':'')+'>English</option></select></div>'+
+      '</div></div></div>';
+    document.getElementById('btnPw').onclick=async()=>{
+      const o=document.getElementById('pOld').value.trim(),n=document.getElementById('pNew').value.trim();
+      if(!o||!n)return tmsg(t('fill_all'),false);
+      try{const r=await fetch('/api/auth/password',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({old_password:o,new_password:n})});const d=await r.json();tmsg(d.ok?t('pw_ok'):(d.error||t('change_failed')),d.ok)}catch{tmsg(t('change_failed'),false)}
+    };
+    document.getElementById('langSel').onchange=function(){lang=this.value;localStorage.setItem('lang',lang);tmsg(t('lang_saved'));setTimeout(()=>location.reload(),1500)};
+    // Expose theme apply fn
+    document.__applyTheme=function(h){applyTheme(h)};
+  }
+
+  
+  async function loadAdmin(){
+    stopPoll(); const tLabel=t('admin');
+    main.innerHTML='<div class="view"><div class="toolbar">'+HB+'<h2>'+tLabel+'</h2></div><div class="loading"><div class="spin"></div></div></div>';
+    try{const r=await fetch('/api/admin/settings'),d=await r.json();const s=d.settings||{},uc=d.userCount||0;
+      main.innerHTML='<div class="view"><div class="toolbar">'+HB+'<h2>'+tLabel+'</h2></div><div class="list"><div class="panel-inner"><h3>'+t('sys_settings')+'</h3><p style="font-size:13px;color:var(--muted);margin-bottom:16px">'+t('total_users')+'：'+uc+'</p><div style="display:flex;flex-direction:column;gap:12px;max-width:380px">'+
+      '<div><div class="setting-row"><span>'+t('max_addrs')+'</span><span style="font-size:12px;color:var(--muted)">'+t('unlimited')+'</span></div><input id="sMax" value="'+esc(s.max_temp_addresses||'5')+'" style="width:100%;border:1px solid var(--border);border-radius:10px;padding:12px 14px;font:inherit;font-size:14px;outline:none"></div>'+
+      '<div><div class="setting-row"><span>'+t('poll_ms_label')+'</span><span style="font-size:12px;color:var(--muted)">200-30000</span></div><input id="sPoll" value="'+esc(s.poll_ms||'1000')+'" style="width:100%;border:1px solid var(--border);border-radius:10px;padding:12px 14px;font:inherit;font-size:14px;outline:none"></div>'+
+      '</div><hr style="border:none;border-top:1px solid var(--border);margin:20px 0 16px"><h3 style="margin-bottom:12px">'+t('video')+'</h3><div style="display:flex;flex-direction:column;gap:12px;max-width:380px">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between"><span>'+t('video_enable')+'</span><select id="sDt" style="padding:8px 12px;border-radius:10px;border:1px solid var(--border);font:inherit;font-size:14px"><option value="off"'+(s.dingtalk_enabled==='off'||!s.dingtalk_enabled?' selected':'')+'>'+t('dt_off')+'</option><option value="hidden"'+(s.dingtalk_enabled==='hidden'?' selected':'')+'>'+t('dt_hidden')+'</option><option value="visible"'+(s.dingtalk_enabled==='visible'?' selected':'')+'>'+t('dt_visible')+'</option></select></div>'+
+      '<button id="btnSave" class="btn-primary" style="width:auto">'+t('save')+'</button></div></div></div></div>';
+      document.getElementById('btnSave').onclick=async()=>{
+        const maxV=document.getElementById('sMax').value.trim(),pollV=document.getElementById('sPoll').value.trim(),dtV=document.getElementById('sDt').value;
+        try{const r=await fetch('/api/admin/settings',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({max_temp_addresses:maxV,poll_ms:pollV,dingtalk_enabled:dtV})});const d=await r.json();
+          if(d.ok){pollMs=parseInt(pollV)||1000;const navDt=document.getElementById('navDingtalk');if(dtV==='visible'){navDt.style.display=''}else{navDt.style.display='none'}tmsg(t('saved'));loadAdmin()}else tmsg(d.error||t('save_failed'),false)}catch{tmsg(t('save_failed'),false)}
+      };
+    }catch{tmsg('加载失败',false)}
+  }
+
+  async function loadCounts(){
+    try{const[ir,sr]=await Promise.all([fetch('/api/inbox'),fetch('/api/sent')]);const[id,sd]=await Promise.all([ir.json(),sr.json()]);document.getElementById('inboxCount').textContent=(id.items||[]).length||'—';document.getElementById('sentCount').textContent=(sd.items||[]).length||'—'}catch{}
+  }
+
+  // Localize hardcoded sidebar text on init
+  localizeUI();
+
+  // Nav
+  document.querySelectorAll('.nav-item').forEach(e=>e.addEventListener('click',()=>load(e.dataset.folder)));
+  loadCounts(); await load('inbox');
+
+  // Mobile download banner (dismissed permanently via localStorage)
+  if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)&&!localStorage.getItem('banner_closed')){
+    const banner=document.createElement('div');
+    banner.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:200;background:var(--panel);border-top:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:14px';
+    banner.innerHTML='<span style="flex:1"><b>临时邮箱</b> App</span><a href="/app.apk" style="background:var(--blue);color:#fff;padding:8px 16px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600">'+t('download')+'</a><button id="bannerClose" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted)">×</button>';
+    setTimeout(()=>{document.body.appendChild(banner);document.getElementById('bannerClose').onclick=()=>{banner.remove();localStorage.setItem('banner_closed','1')}},2000);
+  }
+
+  // Unified notification helper (APK native or browser)
+  function showNotification(title, body) {
+    if (isAndroidApp && typeof window.__smailNotify === 'function') {
+      window.__smailNotify(title, body);
+      return;
+    }
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(title, { body, icon: '/icon-192.png', tag: 'new-mail' });
+    }
+  }
+
+  // Request notification permission
+  if (!isAndroidApp && 'Notification' in window && Notification.permission === 'default') {
+    await Notification.requestPermission();
+  }
+
+  // Service Worker
+  if('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').then(async reg => {
+      navigator.serviceWorker.addEventListener('message', e => {
+        if (e.data.type === 'update') {
+          const bar = document.createElement('div');
+          bar.className = 'update-bar';
+          bar.innerHTML = '<span class="msg">'+t('new_version')+'</span><button class="btn-primary" id="btnUpdate" style="margin-left:auto;background:#fff;color:var(--blue)">'+t('refresh')+'</button>';
+          bar.querySelector('button').onclick = () => { location.reload(); };
+          document.body.appendChild(bar);
+          requestAnimationFrame(() => bar.classList.add('show'));
+        }
+        if (e.data.type === 'reload') location.reload();
+        if (e.data.type === 'notification') {
+          showNotification(e.data.title, e.data.body);
+        }
+        if (e.data.type === 'new-mail') {
+          // SW detected new mail via polling; auto-refresh inbox
+          if (folder === 'inbox' && !detailMail) load('inbox');
+          showNotification(e.data.count > 1 ? e.data.count+t('notify_mail_suffix') : t('notify_mail_single'), t('notify_mail_body'));
+        }
+      });
+
+      // Push subscription
+      if ('PushManager' in window && Notification.permission === 'granted') {
+        try {
+          const vres = await fetch('/api/push/vapid-public-key');
+          const vdat = await vres.json();
+          if (vdat.ok && vdat.publicKey) {
+            const sub = await reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: vdat.publicKey
+            });
+            await fetch('/api/push/subscribe', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify(sub.toJSON())
+            });
+          }
+        } catch {}
+      }
+
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker?.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            const bar = document.createElement('div');
+            bar.className = 'update-bar';
+            bar.innerHTML = '<span class="msg">'+t('update_ready')+'</span><button class="btn-primary" style="margin-left:auto;background:#fff;color:var(--blue)">'+t('refresh')+'</button>';
+            bar.querySelector('button').onclick = () => { newWorker.postMessage('skipWaiting'); location.reload(); };
+            document.body.appendChild(bar);
+            requestAnimationFrame(() => bar.classList.add('show'));
+          }
+        });
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "packageName": "in.indevs.sunsetzhong.email",
+  "host": "sunsetzhong.indevs.in",
+  "name": "Sunsetzhong Email",
+  "launcherName": "S-MAIL",
+  "themeColor": "#2563eb",
+  "backgroundColor": "#f8fafc",
+  "startUrl": "/",
+  "display": "standalone",
+  "iconUrl": "https://sunsetzhong.indevs.in/icon-512.png",
+  "maskableIconUrl": "https://sunsetzhong.indevs.in/icon-512.png",
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "smail"
+  }
+}

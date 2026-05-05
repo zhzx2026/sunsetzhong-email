@@ -1,0 +1,38 @@
+{
+    "logs": [
+        {
+            "outputFile": "dev.indevs.sunsetzhong.email.app-mergeDebugResources-65:/values-night-v8/values-night-v8.xml",
+            "map": [
+                {
+                    "source": "/Users/zhong/.gradle/caches/8.9/transforms/ae0d0c877b83f7912ba148495a222fce/transformed/core-splashscreen-1.0.1/res/values-night-v8/values-night-v8.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "85",
+                        "endOffsets": "136"
+                    }
+                },
+                {
+                    "source": "/Users/zhong/repo/20260501-email/apk/EmailApp/app/src/main/res/values-night/themes.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "7",
+                        "endColumns": "12",
+                        "endOffsets": "390"
+                    },
+                    "to": {
+                        "startLines": "3",
+                        "startColumns": "4",
+                        "startOffsets": "141",
+                        "endLines": "8",
+                        "endColumns": "12",
+                        "endOffsets": "476"
+                    }
+                }
+            ]
+        }
+    ]
+}
