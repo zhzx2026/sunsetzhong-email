@@ -5,138 +5,174 @@ export const DINGTALK_PAGE = `<!doctype html>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>钉钉视频下载 — S-MAIL</title>
 <style>
-:root{--bg:#f8fafc;--panel:#fff;--text:#0f172a;--muted:#64748b;--blue:#2563eb;--line:#e2e8f0;--font:"Google Sans","PingFang SC",system-ui,sans-serif;--radius:10px}
+:root{--bg:#f8fafc;--panel:#fff;--text:#0f172a;--muted:#64748b;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--amber:#ca8a04;--line:#e2e8f0;--font:"Google Sans","PingFang SC",system-ui,sans-serif;--radius:10px;--shadow:0 1px 2px rgba(0,0,0,.04)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex}
 a{color:var(--blue);text-decoration:none}
 
 /* sidebar */
-#sidebar{width:220px;min-height:100vh;background:var(--panel);border-right:1px solid var(--line);padding:20px 0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
-.brand{display:flex;align-items:center;gap:10px;padding:0 20px 20px;border-bottom:1px solid var(--line);margin-bottom:16px}
-.brand-dot{width:28px;height:28px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700}
+#sidebar{width:232px;min-height:100vh;background:var(--panel);border-right:1px solid var(--line);padding:20px 0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:0 20px 20px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.brand-dot{width:30px;height:30px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:700}
 .brand-text{font-size:15px;font-weight:600;color:var(--text)}
-.nav{margin-bottom:4px}
-.nav-item{padding:10px 20px;cursor:pointer;font-size:14px;color:var(--muted);transition:all .15s;display:flex;align-items:center;gap:8px;border-left:3px solid transparent}
+.nav-group-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:12px 20px 6px}
+.nav-item{padding:9px 20px;cursor:pointer;font-size:13px;color:var(--muted);transition:all .15s;display:flex;align-items:center;gap:8px;border-left:3px solid transparent;position:relative}
 .nav-item:hover{color:var(--text);background:#f1f5f9}
 .nav-item.active{color:var(--blue);background:#eff6ff;border-left-color:var(--blue);font-weight:500}
 .nav-item.admin-only{display:none}
 .nav-item.admin-only.show{display:flex}
+.nav-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .25s}
+.nav-dot.done{background:var(--green);border-color:var(--green);color:#fff}
+.nav-dot.warn{background:var(--amber);border-color:var(--amber);color:#fff}
+.nav-item.active .nav-dot:not(.done):not(.warn){border-color:var(--blue);color:var(--blue)}
+.nav-step-badge{font-size:10px;margin-left:auto;padding:2px 8px;border-radius:10px;font-weight:600}
+.nav-step-badge.ok{background:#dcfce7;color:#166534}
+.nav-step-badge.no{background:#fee2e2;color:#991b1b}
 .sidebar-footer{padding:20px;margin-top:auto;border-top:1px solid var(--line)}
-.sidebar-footer a{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.sidebar-footer a{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);transition:color .15s}
 .sidebar-footer a:hover{color:var(--blue)}
 
 /* main */
-#main{flex:1;padding:32px;overflow:hidden}
-.page{display:none}
+#main{flex:1;padding:36px 40px;overflow-y:auto;max-height:100vh}
+.page{display:none;animation:fadeIn .2s ease}
 .page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
-h1{font-size:20px;font-weight:600;margin-bottom:24px}
+h1{font-size:22px;font-weight:600;margin-bottom:24px;letter-spacing:-.3px}
 
 /* cards */
-.card{background:var(--panel);border-radius:16px;border:1px solid var(--line);padding:24px;margin-bottom:20px}
-.card h2{font-size:15px;font-weight:600;margin-bottom:16px;color:var(--text)}
+.card{background:var(--panel);border-radius:14px;border:1px solid var(--line);padding:24px;margin-bottom:20px;box-shadow:var(--shadow)}
+.card h2{font-size:15px;font-weight:600;margin-bottom:16px;color:var(--text);display:flex;align-items:center;gap:8px}
 
 /* metric cards */
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px}
-.metric{background:var(--panel);border-radius:16px;border:1px solid var(--line);padding:20px}
-.metric .label{font-size:12px;color:var(--muted);margin-bottom:6px}
-.metric .value{font-size:28px;font-weight:700;color:var(--text)}
-.metric .sub{font-size:12px;color:var(--muted);margin-top:4px}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:24px}
+.metric{background:var(--panel);border-radius:14px;border:1px solid var(--line);padding:18px 20px;box-shadow:var(--shadow);transition:transform .15s}
+.metric:hover{transform:translateY(-1px)}
+.metric .label{font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px}
+.metric .value{font-size:30px;font-weight:700;color:var(--text);line-height:1}
+.metric .sub{font-size:11px;color:var(--muted);margin-top:4px}
 
 /* form elements */
 input[type="text"],input[type="password"],input[type="number"],select,textarea{
 width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font:inherit;font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s;background:#fff;color:var(--text)
 }
 input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
-button{background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px 20px;font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:background .15s}
-button:hover{background:#1d4ed8}
-button:disabled{background:#94a3b8;cursor:not-allowed}
+button{background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px 20px;font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+button:hover{background:#1d4ed8;transform:translateY(-.5px);box-shadow:0 2px 8px rgba(37,99,235,.25)}
+button:active{transform:translateY(0)}
+button:disabled{background:#94a3b8;cursor:not-allowed;transform:none;box-shadow:none}
 .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
-.btn-ghost:hover{background:#f8fafc;color:var(--text)}
+.btn-ghost:hover{background:#f8fafc;color:var(--text);transform:none;box-shadow:none}
+.btn-danger{background:var(--red)}
+.btn-danger:hover{background:#b91c1c;box-shadow:0 2px 8px rgba(220,38,38,.25)}
+.btn-sm{padding:6px 14px;font-size:12px;border-radius:8px}
 
-/* overview */
-.overview-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.status-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+/* status badges */
+.status-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}
 .status-row:last-child{border-bottom:none}
-.status-label{color:var(--muted);width:100px}
+.status-label{color:var(--muted);width:110px;flex-shrink:0}
 .status-val{flex:1;font-weight:500}
-.status-badge{padding:2px 10px;border-radius:20px;font-size:12px;font-weight:500}
+.status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
 .badge-ok{background:#dcfce7;color:#166534}
 .badge-no{background:#fee2e2;color:#991b1b}
 .badge-warn{background:#fef9c3;color:#854d0e}
 .badge-info{background:#dbeafe;color:#1e40af}
 
 /* url form */
-.url-form{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.url-form{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
 .url-form input{flex:1;min-width:200px}
 
 /* jobs */
-.job-item{border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px;cursor:pointer;transition:border-color .15s}
-.job-item:hover{border-color:var(--blue)}
-.job-item.expanded{border-color:var(--blue);background:#f8fafc}
-.job-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.job-id{font-size:12px;color:var(--muted);font-family:monospace}
-.job-title{font-size:14px;font-weight:500;flex:1;margin:0 12px}
-.job-status{padding:2px 10px;border-radius:20px;font-size:12px;font-weight:500}
-.job-meta{display:flex;gap:16px;font-size:13px;color:var(--muted)}
+.job-item{border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:10px;cursor:pointer;transition:all .15s;background:var(--panel)}
+.job-item:hover{border-color:var(--blue);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.job-item.expanded{border-color:var(--blue);box-shadow:0 2px 8px rgba(37,99,235,.08)}
+.job-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.job-id{font-size:11px;color:var(--muted);font-family:"SF Mono",monospace;background:#f1f5f9;padding:2px 8px;border-radius:4px}
+.job-title{font-size:13px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.job-status{padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;flex-shrink:0}
+.job-meta{display:flex;gap:16px;font-size:12px;color:var(--muted)}
 .job-detail{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
 .job-item.expanded .job-detail{display:block}
-.job-progress-bar{height:6px;background:#e2e8f0;border-radius:3px;margin:10px 0;overflow:hidden}
-.job-progress-fill{height:100%;background:var(--blue);border-radius:3px;transition:width .3s}
-.job-events{margin-top:10px;max-height:200px;overflow-y:auto;font-size:12px;font-family:monospace}
-.job-event{padding:3px 0;color:var(--muted)}
-.job-event.error{color:#dc2626}
-.job-event.success{color:#166534}
+.job-progress-bar{height:4px;background:#e2e8f0;border-radius:2px;margin:8px 0;overflow:hidden}
+.job-progress-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .4s ease}
+.job-events{margin-top:10px;max-height:180px;overflow-y:auto;font-size:11px;font-family:"SF Mono",monospace;background:#f8fafc;border-radius:8px;padding:10px}
+.job-event{padding:2px 0;color:var(--muted)}
+.job-event.error{color:var(--red)}
+.job-event.success{color:var(--green)}
 .files-list{margin-top:8px}
-.file-item{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px}
-.file-item a{color:var(--blue);font-size:13px}
-.retention-hint{font-size:12px;color:var(--muted);margin-top:6px}
+.file-item{display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:13px;background:#f8fafc;border-radius:8px;margin-bottom:4px}
+.file-item a{color:var(--blue);font-size:12px;font-weight:500;padding:4px 12px;background:#eff6ff;border-radius:6px;transition:all .15s}
+.file-item a:hover{background:var(--blue);color:#fff}
+.retention-hint{font-size:11px;color:var(--muted);margin-top:8px;display:flex;align-items:center;gap:4px}
 
 /* pagination */
-.pagination{display:flex;align-items:center;gap:8px;margin-top:16px}
-.pagination button{padding:6px 14px;font-size:13px}
-.page-info{font-size:13px;color:var(--muted);margin:0 8px}
+.pagination{display:flex;align-items:center;gap:8px;margin-top:16px;justify-content:center}
+.pagination button{padding:6px 14px;font-size:12px}
+.page-info{font-size:12px;color:var(--muted);margin:0 8px}
 
 /* qr */
-.qr-box{display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px}
-.qr-image{border:1px solid var(--line);border-radius:12px;padding:8px;background:#fff;min-width:200px;min-height:200px;display:flex;align-items:center;justify-content:center}
-.qr-image img{max-width:180px;max-height:180px}
-.qr-status{font-size:14px;color:var(--muted);text-align:center}
-.login-actions{display:flex;gap:12px;justify-content:center}
+.qr-box{display:flex;flex-direction:column;align-items:center;gap:16px;padding:24px}
+.qr-image{width:220px;height:220px;border:2px dashed var(--line);border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:border-color .3s}
+.qr-image.has-code{border-style:solid;border-color:var(--line)}
+.qr-image img{max-width:200px;max-height:200px;display:block}
+.qr-spinner{width:36px;height:36px;border:3px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.qr-status{font-size:13px;color:var(--muted);text-align:center;min-height:20px}
+.login-actions{display:flex;gap:10px;justify-content:center}
+.qr-hint{font-size:11px;color:var(--muted);text-align:center;max-width:280px;line-height:1.6}
 
 /* legal */
-.legal-text{background:#f8fafc;border-radius:10px;padding:20px;font-size:13px;line-height:1.8;max-height:400px;overflow-y:auto;white-space:pre-wrap;margin-bottom:20px}
-.checkbox-row{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.legal-text{background:#f8fafc;border-radius:10px;padding:20px;font-size:13px;line-height:1.8;max-height:360px;overflow-y:auto;white-space:pre-wrap;margin-bottom:20px;border:1px solid var(--line)}
+.checkbox-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;font-size:14px}
 .checkbox-row input[type="checkbox"]{width:18px;height:18px;accent-color:var(--blue)}
 
 /* password section */
-.pw-form{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px}
-.pw-form input{flex:1;min-width:160px;max-width:280px}
-.pw-status{font-size:13px;color:var(--muted)}
+.pw-form{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.pw-form input{flex:1;min-width:160px;max-width:260px}
+.pw-hint{font-size:12px;color:var(--muted);margin-top:8px}
+.pw-strength{height:3px;border-radius:2px;margin-top:6px;transition:all .25s;max-width:260px}
 
 /* gate */
-#gate{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
+#gate{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 #gate.show{display:flex}
-.gate-card{background:#fff;border-radius:16px;padding:32px;max-width:500px;width:90%;max-height:90vh;overflow-y:auto}
-.gate-card h2{font-size:18px;margin-bottom:8px}
-.gate-card p{font-size:14px;color:var(--muted);margin-bottom:20px}
+.gate-card{background:#fff;border-radius:18px;padding:32px;max-width:480px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.gate-card h2{font-size:18px;margin-bottom:6px}
+.gate-card p{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.gate-progress{display:flex;gap:4px;margin-bottom:24px}
+.gate-step-bar{flex:1;height:3px;background:var(--line);border-radius:2px;transition:background .3s}
+.gate-step-bar.done{background:var(--green)}
+.gate-step-bar.current{background:var(--blue)}
 .gate-state{display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px;text-align:center}
-.gate-icon{font-size:48px}
-.gate-icon.ok{color:#16a34a}
-.gate-icon.no{color:#dc2626}
-.gate-icon.warn{color:#ca8a04}
+.gate-icon{font-size:48px;line-height:1}
+.gate-icon.ok{color:var(--green)}
+.gate-icon.no{color:var(--red)}
+.gate-icon.warn{color:var(--amber)}
+.gate-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+
+/* toast */
+#toast-container{position:fixed;top:20px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.12);animation:slideIn .25s ease;max-width:380px;display:flex;align-items:center;gap:8px}
+.toast.ok{background:#166534;color:#fff}
+.toast.err{background:#991b1b;color:#fff}
+.toast.info{background:#1e40af;color:#fff}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
 
 /* admin */
 .admin-section{margin-bottom:32px}
 .admin-section h2{font-size:16px;font-weight:600;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
 .admin-table{width:100%;border-collapse:collapse;font-size:13px}
-.admin-table th{text-align:left;padding:8px 12px;background:#f8fafc;color:var(--muted);font-weight:500;border-bottom:1px solid var(--line)}
+.admin-table th{text-align:left;padding:8px 12px;background:#f8fafc;color:var(--muted);font-weight:500;border-bottom:1px solid var(--line);font-size:11px;text-transform:uppercase;letter-spacing:.3px}
 .admin-table td{padding:10px 12px;border-bottom:1px solid var(--line)}
 .admin-table tr:hover td{background:#f8fafc}
 .admin-textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit;font-size:13px;min-height:200px;resize:vertical;margin-top:8px}
 .loading{text-align:center;padding:40px;color:var(--muted)}
-.error-msg{color:#dc2626;font-size:13px;padding:8px 12px;background:#fee2e2;border-radius:8px;margin-bottom:16px}
-.info-msg{color:#166534;font-size:13px;padding:8px 12px;background:#dcfce7;border-radius:8px;margin-bottom:16px}
+.error-msg{color:var(--red);font-size:13px;padding:10px 14px;background:#fee2e2;border-radius:8px;margin-bottom:12px}
+.info-msg{color:#166534;font-size:13px;padding:10px 14px;background:#dcfce7;border-radius:8px;margin-bottom:12px}
+
+/* empty state */
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-state .empty-icon{font-size:40px;margin-bottom:12px}
+.empty-state .empty-text{font-size:14px}
 </style>
 </head>
 <body>
@@ -148,12 +184,15 @@ button:disabled{background:#94a3b8;cursor:not-allowed}
     <div class="brand-text">视频下载</div>
   </div>
   <div class="nav">
-    <div class="nav-item active" data-page="overview" onclick="navigate('overview')">仪表盘</div>
-    <div class="nav-item" data-page="legal" onclick="navigate('legal')">条款确认</div>
-    <div class="nav-item" data-page="qr" onclick="navigate('qr')">钉钉验证</div>
-    <div class="nav-item" data-page="password" onclick="navigate('password')">下载密码</div>
-    <div class="nav-item" data-page="jobs" onclick="navigate('jobs')">详细记录</div>
-    <div class="nav-item admin-only" data-page="admin" onclick="navigate('admin')">管理页</div>
+    <div class="nav-group-label">主菜单</div>
+    <div class="nav-item active" data-page="overview" onclick="navigate('overview')"><span class="nav-dot">1</span>仪表盘</div>
+    <div class="nav-item" data-page="jobs" onclick="navigate('jobs')"><span class="nav-dot">4</span>详细记录</div>
+    <div class="nav-group-label">设置</div>
+    <div class="nav-item" data-page="legal" onclick="navigate('legal')"><span class="nav-dot" id="step-legal">1</span>条款确认<span class="nav-step-badge no" id="badge-legal">未完成</span></div>
+    <div class="nav-item" data-page="qr" onclick="navigate('qr')"><span class="nav-dot" id="step-qr">2</span>钉钉验证<span class="nav-step-badge no" id="badge-qr">未完成</span></div>
+    <div class="nav-item" data-page="password" onclick="navigate('password')"><span class="nav-dot" id="step-pw">3</span>下载密码<span class="nav-step-badge no" id="badge-pw">未完成</span></div>
+    <div class="nav-group-label">管理</div>
+    <div class="nav-item admin-only" data-page="admin" onclick="navigate('admin')"><span class="nav-dot">5</span>管理页</div>
   </div>
   <div class="sidebar-footer">
     <a href="/">← 返回邮箱</a>
@@ -204,12 +243,13 @@ button:disabled{background:#94a3b8;cursor:not-allowed}
     <h1>钉钉验证</h1>
     <div class="card">
       <div id="qr-login-box" class="qr-box">
-        <div id="qr-image" class="qr-image"></div>
-        <div id="qr-status" class="qr-status">点击开始获取二维码</div>
+        <div id="qr-image" class="qr-image"><div class="empty-state"><div class="empty-icon">📱</div><div class="empty-text" style="font-size:12px">点击下方按钮获取二维码</div></div></div>
+        <div id="qr-status" class="qr-status"></div>
         <div class="login-actions">
           <button id="btn-start-qr" onclick="startQRLogin()">获取二维码</button>
-          <button class="btn-ghost" onclick="checkLoginStatus()">刷新状态</button>
+          <button class="btn-ghost btn-sm" onclick="checkLoginStatus()">刷新状态</button>
         </div>
+        <div class="qr-hint">二维码有效期为 5 分钟<br>请使用钉钉 App 扫码<br>请勿刷新页面</div>
       </div>
       <div id="qr-error" class="error-msg" style="display:none"></div>
     </div>
@@ -251,13 +291,21 @@ button:disabled{background:#94a3b8;cursor:not-allowed}
 
 </div>
 
+<!-- toast container -->
+<div id="toast-container"></div>
+
 <!-- gate overlay -->
 <div id="gate">
   <div class="gate-card">
+    <div class="gate-progress" id="gate-progress">
+      <div class="gate-step-bar current"></div>
+      <div class="gate-step-bar"></div>
+      <div class="gate-step-bar"></div>
+    </div>
     <h2 id="gate-title">正在进行</h2>
     <p id="gate-desc">请稍候...</p>
     <div id="gate-body" class="gate-state"></div>
-    <div style="margin-top:16px;text-align:right"><button id="gate-btn" onclick="gateAction()" style="display:none">继续</button></div>
+    <div class="gate-actions"><button id="gate-btn" onclick="gateAction()" style="display:none">继续</button></div>
   </div>
 </div>
 
@@ -284,6 +332,7 @@ async function init() {
   if (state.user.isSudo) document.querySelectorAll('.admin-only').forEach(el => el.classList.add('show'));
   await loadStatus();
   await loadLegal();
+  updateSidebarBadges();
   if (state.status && !state.status.legal_accepted) { showGate('legal'); return; }
   if (state.status && !state.status.cookies_ready) { showGate('qr'); return; }
   if (state.status && !state.status.has_zip_password) { showGate('password'); return; }
@@ -307,27 +356,35 @@ function showGate(type) {
   const desc = document.getElementById('gate-desc');
   const body = document.getElementById('gate-body');
   const btn = document.getElementById('gate-btn');
+  const progress = document.getElementById('gate-progress');
   g.classList.add('show');
   btn.style.display = 'none';
+
+  const steps = { legal: 0, qr: 1, password: 2 };
+  const stepIdx = steps[type] || 0;
+  if (progress) {
+    progress.innerHTML = [0,1,2].map(i => '<div class="gate-step-bar' + (i < stepIdx ? ' done' : i === stepIdx ? ' current' : '') + '"></div>').join('');
+  }
 
   if (type === 'legal') {
     title.textContent = '请先阅读并接受条款';
     desc.textContent = '继续使用钉钉视频下载服务前，请接受以下免责声明';
-    body.innerHTML = '<div class="legal-text" style="max-height:300px;font-size:12px">' + escHtml(state.legalText) + '</div><div class="checkbox-row"><input type="checkbox" id="gate-check"><label for="gate-check">我已阅读并接受上述所有条款</label></div>';
-    btn.style.display = 'inline-block';
+    body.innerHTML = '<div class="legal-text" style="max-height:260px;font-size:12px">' + escHtml(state.legalText) + '</div><div class="checkbox-row"><input type="checkbox" id="gate-check"><label for="gate-check">我已阅读并接受上述所有条款</label></div>';
+    btn.style.display = 'inline-flex';
+    btn.textContent = '接受条款';
     btn.onclick = acceptLegal;
   } else if (type === 'qr') {
     title.textContent = '请完成钉钉验证';
     desc.textContent = '需要通过二维码登录获取有效的 Cookies 才能提交任务';
-    body.innerHTML = '<div class="gate-icon warn">⚠</div><div>您尚未完成钉钉验证，请前往「钉钉验证」页面扫码登录</div><div style="margin-top:12px"><button onclick="closeGate();navigate(&quot;qr&quot;)">前往验证 →</button></div>';
+    body.innerHTML = '<div class="gate-icon warn">📱</div><div style="font-size:14px">您尚未完成钉钉验证</div><div style="margin-top:12px"><button onclick="closeGate();navigate(&quot;qr&quot;)">前往验证 →</button></div>';
   } else if (type === 'password') {
     title.textContent = '请设置下载密码';
     desc.textContent = '下载的视频将打包为加密 zip，需要设置解压密码';
-    body.innerHTML = '<div class="gate-icon warn">🔑</div><div style="margin-bottom:12px">请先设置下载密码</div>' +
+    body.innerHTML = '<div class="gate-icon warn">🔑</div><div style="margin-bottom:12px;font-size:14px">请先设置下载密码</div>' +
       '<input type="password" id="gate-pw" placeholder="输入密码（至少4位）" style="margin-bottom:8px" />' +
       '<input type="password" id="gate-pw2" placeholder="确认密码" style="margin-bottom:8px" />' +
       '<div id="gate-pw-err" style="color:#dc2626;font-size:13px;margin-bottom:8px"></div>';
-    btn.style.display = 'inline-block';
+    btn.style.display = 'inline-flex';
     btn.textContent = '保存密码';
     btn.onclick = gateSavePw;
   }
@@ -441,7 +498,7 @@ function jobRowHTML(job, expanded) {
     downloadBtn = ' <a href="' + escHtml(job.files[0].download_url) + '" target="_blank" style="font-size:12px;color:var(--blue)">下载</a>';
   }
 
-  return '<div class="job-item' + (expanded ? ' expanded' : '') + '" onclick="toggleJob(this,&quot;' + job.id + '&quot;)">' +
+  return '<div class="job-item' + (expanded ? ' expanded' : '') + '" data-job-id="' + job.id + '" onclick="toggleJob(this,&quot;' + job.id + '&quot;)">' +
     '<div class="job-header">' +
       '<span class="job-id">' + job.id.slice(0,20) + '...</span>' +
       '<span class="job-title">' + escHtml(job.current_title || (job.urls && job.urls[0]) || '-') + downloadBtn + '</span>' +
@@ -578,15 +635,18 @@ async function startQRLogin() {
   if (d.login_session) {
     var qrSrc = getQRImageSrc(d.login_session);
     if (qrSrc) {
+      document.getElementById('qr-image').className = 'qr-image has-code';
       document.getElementById('qr-image').innerHTML = '<img src="' + qrSrc + '" alt="QR Code" />';
       statusEl.textContent = '二维码已生成，请在钉钉 App 中扫码';
     } else {
+      document.getElementById('qr-image').className = 'qr-image';
       statusEl.textContent = '已启动，请等待 GitHub Actions 生成二维码（约10-30秒）...';
-      document.getElementById('qr-image').innerHTML = '<div style="padding:40px;color:var(--muted)">加载中...</div>';
+      document.getElementById('qr-image').innerHTML = '<div class="qr-spinner"></div>';
     }
   } else {
+    document.getElementById('qr-image').className = 'qr-image';
     statusEl.textContent = '已启动，请等待 GitHub Actions 生成二维码（约10-30秒）...';
-    document.getElementById('qr-image').innerHTML = '<div style="padding:40px;color:var(--muted)">加载中...</div>';
+    document.getElementById('qr-image').innerHTML = '<div class="qr-spinner"></div>';
   }
 }
 
@@ -613,13 +673,22 @@ async function checkLoginStatus() {
   }
 
   const statusMap = {
-    pending: ['等待启动', 'badge-warn'],
-    qr_ready: ['二维码已就绪', 'badge-info'],
-    completed: ['登录完成', 'badge-ok'],
-    failed: ['登录失败: ' + (s.error_message || ''), 'badge-no'],
+    pending: ['等待 GitHub Actions 启动（约 30 秒）', 'badge-warn'],
+    qr_ready: ['二维码已生成，请扫码（5 分钟内有效）', 'badge-info'],
+    completed: ['登录成功，Cookies 已保存', 'badge-ok'],
+    failed: ['登录失败', 'badge-no'],
   };
-  const [label, cls] = statusMap[s.status] || [s.status, 'badge-warn'];
-  document.getElementById('qr-status').innerHTML = '<span class="status-badge ' + cls + '">' + label + '</span>';
+  const [label, cls] = statusMap[s.status] || ['未知状态: ' + s.status, 'badge-warn'];
+  var statusHtml = '<span class="status-badge ' + cls + '">' + label + '</span>';
+  if (s.status === 'failed' && s.error_message) {
+    statusHtml += '<div style="font-size:11px;color:var(--muted);margin-top:4px">' + escHtml(s.error_message) + '</div>';
+  }
+  if (s.status === 'qr_ready' && s.created_at) {
+    var elapsed = Math.floor((Date.now() - new Date(s.created_at).getTime()) / 1000);
+    var remaining = Math.max(0, 300 - elapsed);
+    statusHtml += '<div style="font-size:11px;color:var(--muted);margin-top:4px">剩余时间: ' + formatSeconds(remaining) + '</div>';
+  }
+  document.getElementById('qr-status').innerHTML = statusHtml;
 
   if (s.status === 'completed') {
     await loadStatus();
@@ -721,6 +790,32 @@ function formatBytes(b) {
   return (b / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
 }
 
+function formatSeconds(s) {
+  if (s < 60) return s + ' 秒';
+  var m = Math.floor(s / 60);
+  var sec = s % 60;
+  return m + ' 分 ' + sec + ' 秒';
+}
+
+function updateSidebarBadges() {
+  var s = state.status || {};
+  var leg = state.legalState || {};
+  var setBadge = function(id, done) {
+    var el = document.getElementById(id);
+    if (el) { el.className = 'nav-step-badge ' + (done ? 'ok' : 'no'); el.textContent = done ? '已完成' : '未完成'; }
+  };
+  var setDot = function(id, done) {
+    var el = document.getElementById(id);
+    if (el) { el.className = 'nav-dot' + (done ? ' done' : ''); el.textContent = done ? '✓' : el.getAttribute('data-step') || el.textContent; }
+  };
+  setBadge('badge-legal', leg.accepted);
+  setBadge('badge-qr', s.cookies_ready);
+  setBadge('badge-pw', s.has_zip_password);
+  setDot('step-legal', leg.accepted);
+  setDot('step-qr', s.cookies_ready);
+  setDot('step-pw', s.has_zip_password);
+}
+
 function escHtml(s) {
   if (s == null) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -745,11 +840,27 @@ function startPolling() {
         if (r && JSON.stringify(r.jobs) !== JSON.stringify(state.recentJobs)) loadRecentJobs();
       }
     }
-    if (s.cookies_ready && s.legal_accepted && s.has_zip_password) return;
+    // Auto-refresh expanded job details
+    var expanded = document.querySelector('.job-item.expanded');
+    if (expanded) {
+      var jobId = expanded.getAttribute('data-job-id');
+      if (jobId) {
+        var d = await api('/dingtalk/jobs/' + jobId + '?include=events');
+        if (d && d.job && (d.job.status === 'running' || d.job.status === 'queued')) {
+          d.job._events = d.events || [];
+          var newEl = document.createElement('div');
+          newEl.outerHTML = jobRowHTML(d.job, true);
+          expanded.outerHTML = newEl.outerHTML;
+        }
+      }
+    }
+    if (s.cookies_ready && s.legal_accepted && s.has_zip_password) {
+      // All gates passed, stop polling sidebar badges
+    }
     if (document.getElementById('page-qr').classList.contains('active') && state.loginSession) {
       if (state.loginSession.status !== 'completed') await checkLoginStatus();
     }
-  }, 5000);
+  }, 3000);
 }
 
 checkAuth();
