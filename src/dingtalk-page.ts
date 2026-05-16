@@ -122,7 +122,7 @@ button:disabled{background:#94a3b8;cursor:not-allowed;transform:none;box-shadow:
 .qr-hint{font-size:11px;color:var(--muted);text-align:center;max-width:280px;line-height:1.6}
 
 /* legal */
-.legal-text{background:#f8fafc;border-radius:10px;padding:20px;font-size:13px;line-height:1.8;max-height:360px;overflow-y:auto;white-space:pre-wrap;margin-bottom:20px;border:1px solid var(--line)}
+.legal-text{background:#f8fafc;border-radius:10px;padding:20px;font-size:13px;line-height:1.8;max-height:360px;overflow-y:auto;margin-bottom:20px;border:1px solid var(--line)}
 .checkbox-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;font-size:14px}
 .checkbox-row input[type="checkbox"]{width:18px;height:18px;accent-color:var(--blue)}
 
@@ -215,7 +215,7 @@ button:disabled{background:#94a3b8;cursor:not-allowed;transform:none;box-shadow:
     <div class="card">
       <h2>提交下载任务</h2>
       <div class="url-form">
-        <input type="text" id="url-input" placeholder="输入视频页面 URL，支持批量（每行一个）" />
+        <input type="text" id="url-input" placeholder="输入视频页面 URL" />
         <input type="number" id="thread-input" placeholder="线程" style="width:100px" />
         <button onclick="submitJob()">提交任务</button>
       </div>
@@ -333,9 +333,18 @@ async function init() {
   await loadStatus();
   await loadLegal();
   updateSidebarBadges();
+  // Respect hash-based routing on initial load
+  var hash = location.hash.replace(/^#/, '');
+  if (hash === 'legal' || hash === 'qr' || hash === 'password' || hash === 'admin') {
+    navigate(hash);
+    if (hash !== 'admin') startPolling();
+    return;
+  }
   if (state.status && !state.status.legal_accepted) { showGate('legal'); return; }
   if (state.status && !state.status.cookies_ready) { showGate('qr'); return; }
   if (state.status && !state.status.has_zip_password) { showGate('password'); return; }
+  var hash = location.hash.replace(/^#/, '');
+  if (hash === 'jobs') { navigate('jobs'); startPolling(); return; }
   showOverview();
   startPolling();
 }
@@ -369,7 +378,7 @@ function showGate(type) {
   if (type === 'legal') {
     title.textContent = '请先阅读并接受条款';
     desc.textContent = '继续使用钉钉视频下载服务前，请接受以下免责声明';
-    body.innerHTML = '<div class="legal-text" style="max-height:260px;font-size:12px">' + escHtml(state.legalText) + '</div><div class="checkbox-row"><input type="checkbox" id="gate-check"><label for="gate-check">我已阅读并接受上述所有条款</label></div>';
+    body.innerHTML = '<div class="legal-text" style="max-height:260px;font-size:12px">' + renderMarkdown(state.legalText) + '</div><div class="checkbox-row"><input type="checkbox" id="gate-check"><label for="gate-check">我已阅读并接受上述所有条款</label></div>';
     btn.style.display = 'inline-flex';
     btn.textContent = '接受条款';
     btn.onclick = acceptLegal;
@@ -416,8 +425,12 @@ function closeGate() { document.getElementById('gate').classList.remove('show');
 function gateAction() {}
 
 function navigate(page) {
+  if (location.hash !== '#' + page) {
+    history.pushState(null, '', '#' + page);
+  }
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  document.querySelector('.nav-item[data-page="' + page + '"]').classList.add('active');
+  var navItem = document.querySelector('.nav-item[data-page="' + page + '"]');
+  if (navItem) navItem.classList.add('active');
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
   if (page === 'jobs') loadJobs(1);
@@ -451,16 +464,20 @@ function renderMetrics() {
 function renderStatus() {
   const s = state.status || {};
   const legal = state.legalState || {};
-  const rows = [
-    ['Cookie状态', s.cookies_ready ? '<span class="status-badge badge-ok">已就绪</span>' : '<span class="status-badge badge-no">未就绪</span>'],
-    ['条款接受', legal.accepted ? '<span class="status-badge badge-ok">已接受</span>' : '<span class="status-badge badge-no">未接受</span>'],
-    ['下载密码', s.has_zip_password ? '<span class="status-badge badge-ok">已设置</span>' : '<span class="status-badge badge-no">未设置</span>'],
-    ['当前用户', state.user ? state.user.username : '-'],
-    ['管理员', state.user && state.user.isSudo ? '<span class="status-badge badge-ok">是</span>' : '<span class="status-badge badge-warn">否</span>'],
-    ['Artifact保留', s.artifact_retention_days ? s.artifact_retention_days + ' 天' : '-'],
-    ['默认线程', s.default_thread || '-'],
+  const items = [
+    ['Cookie', s.cookies_ready ? '已就绪' : '未就绪', s.cookies_ready ? 'ok' : 'no'],
+    ['条款', legal.accepted ? '已接受' : '未接受', legal.accepted ? 'ok' : 'no'],
+    ['密码', s.has_zip_password ? '已设置' : '未设置', s.has_zip_password ? 'ok' : 'no'],
+    ['用户', state.user ? state.user.username : '-', ''],
+    ['管理员', state.user && state.user.isSudo ? '是' : '否', ''],
+    ['保留期', s.artifact_retention_days ? s.artifact_retention_days + '天' : '-', ''],
+    ['线程', s.default_thread || '-', ''],
   ];
-  document.getElementById('status-rows').innerHTML = rows.map(([l, v]) => '<div class="status-row"><span class="status-label">' + l + '</span><span class="status-val">' + v + '</span></div>').join('');
+  document.getElementById('status-rows').innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px">' +
+    items.map(function(i) {
+      var badge = i[2] ? '<span class="status-badge badge-' + (i[2] === 'ok' ? 'ok' : 'no') + '" style="font-size:10px">' + i[1] + '</span>' : '<span style="font-weight:500">' + i[1] + '</span>';
+      return '<div style="background:#f8fafc;border-radius:10px;padding:12px 14px;text-align:center"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px">' + i[0] + '</div>' + badge + '</div>';
+    }).join('') + '</div>';
 }
 
 async function loadRecentJobs() {
@@ -492,19 +509,26 @@ function jobRowHTML(job, expanded) {
       '<div class="retention-hint">文件为加密 zip，密码为您设置的下载密码。Artifacts 将在 ' + retention + ' 天后过期。</div>';
   }
 
-  // Succeeded jobs: show download button even without expanding
+  // Succeeded jobs with full progress: show download button
   let downloadBtn = '';
-  if (job.status === 'succeeded' && job.files && job.files.length && job.files[0].download_url) {
-    downloadBtn = ' <a href="' + escHtml(job.files[0].download_url) + '" target="_blank" style="font-size:12px;color:var(--blue)">下载</a>';
+  if (job.status === 'succeeded' && pct >= 100 && job.files && job.files.length && job.files[0].download_url) {
+    downloadBtn = '<a href="' + escHtml(job.files[0].download_url) + '" target="_blank" style="display:inline-block;background:var(--blue);color:#fff;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:500;margin-top:8px;text-decoration:none">下载加密包</a>';
+  }
+
+  // Cancel button for queued/running jobs
+  var cancelBtn = '';
+  if (job.status === 'queued' || job.status === 'running') {
+    cancelBtn = '<button class="btn-ghost btn-sm" style="margin-top:8px;color:var(--red);border-color:var(--red)" onclick="event.stopPropagation();cancelJob(\\'' + job.id + '\\')">取消任务</button>';
   }
 
   return '<div class="job-item' + (expanded ? ' expanded' : '') + '" data-job-id="' + job.id + '" onclick="toggleJob(this,&quot;' + job.id + '&quot;)">' +
     '<div class="job-header">' +
       '<span class="job-id">' + job.id.slice(0,20) + '...</span>' +
-      '<span class="job-title">' + escHtml(job.current_title || (job.urls && job.urls[0]) || '-') + downloadBtn + '</span>' +
+      '<span class="job-title">' + escHtml(job.current_title || (job.urls && job.urls[0]) || '-') + '</span>' +
       '<span class="job-status ' + cls + '">' + label + '</span>' +
     '</div>' +
     '<div class="job-meta"><span>' + dt + '</span><span>线程: ' + job.thread + '</span><span>进度: ' + job.completed_parts + '/' + job.total_parts + '</span></div>' +
+    downloadBtn + cancelBtn +
     (pct > 0 ? '<div class="job-progress-bar"><div class="job-progress-fill" style="width:' + pct + '%"></div></div>' : '') +
     (errors.length ? '<div style="font-size:12px;color:#dc2626;margin-top:6px">' + errors.join('; ') + '</div>' : '') +
     '<div class="job-detail">' + filesHtml + eventsHtml + '</div>' +
@@ -556,10 +580,9 @@ async function submitJob() {
   errEl.style.display = 'none';
   infoEl.style.display = 'none';
 
-  const raw = urlInput.value.trim();
-  if (!raw) { errEl.textContent = '请输入 URL'; errEl.style.display = 'block'; return; }
+  const url = urlInput.value.trim();
+  if (!url) { errEl.textContent = '请输入 URL'; errEl.style.display = 'block'; return; }
 
-  const urls = raw.split(/\\n/).map(u => u.trim()).filter(Boolean);
   const thread = parseInt(threadInput.value) || state.status?.default_thread || 100;
 
   errEl.style.display = 'none';
@@ -569,7 +592,7 @@ async function submitJob() {
   const d = await api('/dingtalk/jobs', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ urls, thread, create_video_list: true })
+    body: JSON.stringify({ url, thread, create_video_list: true })
   });
 
   if (!d) return;
@@ -584,6 +607,18 @@ async function submitJob() {
     await loadStatus();
     showOverview();
     setTimeout(() => { infoEl.style.display = 'none'; }, 3000);
+  }
+}
+
+async function cancelJob(jobId) {
+  if (!confirm('确定要取消此任务吗？')) return;
+  var d = await api('/dingtalk/jobs/' + jobId + '/cancel', { method: 'POST' });
+  if (d && d.ok) {
+    toast('任务已取消', 'info');
+    await loadStatus();
+    showOverview();
+  } else {
+    toast(d?.error || '取消失败', 'err');
   }
 }
 
@@ -687,6 +722,10 @@ async function checkLoginStatus() {
     var elapsed = Math.floor((Date.now() - new Date(s.created_at).getTime()) / 1000);
     var remaining = Math.max(0, 300 - elapsed);
     statusHtml += '<div style="font-size:11px;color:var(--muted);margin-top:4px">剩余时间: ' + formatSeconds(remaining) + '</div>';
+    if (remaining <= 0) {
+      statusHtml += '<div style="margin-top:8px;color:var(--amber);font-size:13px">二维码已过期</div>';
+      statusHtml += '<div style="margin-top:6px"><button class="btn-ghost btn-sm" onclick="startQRLogin()">重新获取二维码</button></div>';
+    }
   }
   document.getElementById('qr-status').innerHTML = statusHtml;
 
@@ -709,7 +748,7 @@ function renderLegal() {
   const accepted = legal.accepted;
   const html =
     '<div style="margin-bottom:20px"><span class="status-badge ' + (accepted ? 'badge-ok' : 'badge-warn') + '">' + (accepted ? '已接受 v' + legal.version : '未接受') + '</span></div>' +
-    '<div class="legal-text">' + escHtml(state.legalText) + '</div>' +
+    '<div class="legal-text">' + renderMarkdown(state.legalText) + '</div>' +
     (!accepted ? '<div class="checkbox-row"><input type="checkbox" id="legal-check"><label for="legal-check">我已阅读并接受上述所有条款</label></div><button onclick="acceptLegalFromPage()">接受条款</button>' : '<div style="color:#166534;font-size:14px">✓ 您已接受当前版本条款</div>');
   document.getElementById('legal-content').innerHTML = html;
 }
@@ -821,6 +860,40 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function renderMarkdown(text) {
+  if (!text) return '';
+  var lines = text.split('\\n');
+  var html = '';
+  var inList = false;
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    if (/^##\\s/.test(line)) {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += '<h3 style="font-size:15px;font-weight:600;margin:16px 0 8px">' + escHtml(line.replace(/^##\\s+/, '')) + '</h3>';
+    } else if (/^-\\s/.test(line)) {
+      if (!inList) { html += '<ul style="padding-left:20px;margin:4px 0">'; inList = true; }
+      html += '<li style="margin-bottom:4px">' + escHtml(line.replace(/^-\\s+/, '')) + '</li>';
+    } else if (/^\\s*$/.test(line)) {
+      if (inList) { html += '</ul>'; inList = false; }
+    } else {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += '<p style="margin:4px 0">' + escHtml(line) + '</p>';
+    }
+  }
+  if (inList) html += '</ul>';
+  return html;
+}
+
+function toast(msg, type) {
+  type = type || 'info';
+  var container = document.getElementById('toast-container');
+  var el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(function() { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(function() { el.remove(); }, 300); }, 3000);
+}
+
 function getQRImageSrc(session) {
   if (session.qr_image_base64) return 'data:image/png;base64,' + session.qr_image_base64;
   return null;
@@ -862,6 +935,28 @@ function startPolling() {
     }
   }, 3000);
 }
+
+// Hash-based routing
+function handleHashChange() {
+  var hash = location.hash.replace(/^#/, '') || 'overview';
+  var validPages = ['overview', 'legal', 'qr', 'password', 'jobs', 'admin'];
+  if (validPages.indexOf(hash) < 0) hash = 'overview';
+  // Only navigate if user is authenticated (state.user exists) and gates are passed
+  if (state.user && state.status) {
+    var s = state.status;
+    var allGates = s.legal_accepted && s.cookies_ready && s.has_zip_password;
+    if (hash === 'overview' || hash === 'jobs') {
+      if (allGates) navigate(hash);
+    } else {
+      navigate(hash);
+    }
+  }
+}
+window.addEventListener('hashchange', handleHashChange);
+window.addEventListener('popstate', function() {
+  var hash = location.hash.replace(/^#/, '') || 'overview';
+  navigate(hash);
+});
 
 checkAuth();
 </script>

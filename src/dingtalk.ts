@@ -707,6 +707,30 @@ dt.get("/jobs/:id", async (c) => {
   return c.json({ job, events: await listJobEvents(env, jobID) });
 });
 
+// ── Cancel job ──
+dt.post("/jobs/:id/cancel", async (c) => {
+  const u = getUser(c);
+  const env = c.env as Env;
+  const jobID = c.req.param("id");
+  const job = await getJob(env, jobID, u.id);
+  if (!job) return c.json({ error: "job not found" }, 404);
+  if (job.status !== "queued" && job.status !== "running") return c.json({ error: "job cannot be cancelled in its current state" }, 400);
+  // Cancel the GitHub Actions run if we have a run ID
+  if (job.runner_run_id && env.GITHUB_REPOSITORY && env.GITHUB_ACTIONS_TOKEN) {
+    try {
+      await fetch(
+        `https://api.github.com/repos/${env.GITHUB_REPOSITORY}/actions/runs/${job.runner_run_id}/cancel`,
+        {
+          method: "POST",
+          headers: { accept: "application/vnd.github+json", authorization: `Bearer ${env.GITHUB_ACTIONS_TOKEN}`, "user-agent": "S-MAIL-DingTalk" },
+        },
+      );
+    } catch { /* best-effort cancel */ }
+  }
+  await completeJob(env, jobID, { status: "failed", stage: "cancelled", errors: ["用户取消任务"], message: "用户取消了任务" });
+  return c.json({ ok: true });
+});
+
 // ── File download (artifact proxy) ──
 dt.get("/files", async (c) => {
   const u = getUser(c);
