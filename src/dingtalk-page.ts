@@ -319,7 +319,7 @@ function showGate(type) {
   } else if (type === 'qr') {
     title.textContent = '请完成钉钉验证';
     desc.textContent = '需要通过二维码登录获取有效的 Cookies 才能提交任务';
-    body.innerHTML = '<div class="gate-icon warn">⚠</div><div>您尚未完成钉钉验证，请前往「钉钉验证」页面扫码登录</div><div style="margin-top:12px"><button onclick="closeGate();navigate(\'qr\')">前往验证 →</button></div>';
+    body.innerHTML = '<div class="gate-icon warn">⚠</div><div>您尚未完成钉钉验证，请前往「钉钉验证」页面扫码登录</div><div style="margin-top:12px"><button onclick="closeGate();navigate(&quot;qr&quot;)">前往验证 →</button></div>';
   } else if (type === 'password') {
     title.textContent = '请设置下载密码';
     desc.textContent = '下载的视频将打包为加密 zip，需要设置解压密码';
@@ -441,7 +441,7 @@ function jobRowHTML(job, expanded) {
     downloadBtn = ' <a href="' + escHtml(job.files[0].download_url) + '" target="_blank" style="font-size:12px;color:var(--blue)">下载</a>';
   }
 
-  return '<div class="job-item' + (expanded ? ' expanded' : '') + '" onclick="toggleJob(this, \'' + job.id + '\')">' +
+  return '<div class="job-item' + (expanded ? ' expanded' : '') + '" onclick="toggleJob(this,&quot;' + job.id + '&quot;)">' +
     '<div class="job-header">' +
       '<span class="job-id">' + job.id.slice(0,20) + '...</span>' +
       '<span class="job-title">' + escHtml(job.current_title || (job.urls && job.urls[0]) || '-') + downloadBtn + '</span>' +
@@ -575,9 +575,15 @@ async function startQRLogin() {
   if (d.error) { errEl.textContent = d.error; errEl.style.display = 'block'; return; }
 
   state.loginSession = d.login_session;
-  if (d.login_session && d.login_session.qr_url) {
-    document.getElementById('qr-image').innerHTML = '<img src="' + escHtml(d.login_session.qr_url) + '" alt="QR Code" />';
-    statusEl.textContent = '二维码已生成，请在钉钉 App 中扫码';
+  if (d.login_session) {
+    var qrSrc = getQRImageSrc(d.login_session);
+    if (qrSrc) {
+      document.getElementById('qr-image').innerHTML = '<img src="' + qrSrc + '" alt="QR Code" />';
+      statusEl.textContent = '二维码已生成，请在钉钉 App 中扫码';
+    } else {
+      statusEl.textContent = '已启动，请等待 GitHub Actions 生成二维码（约10-30秒）...';
+      document.getElementById('qr-image').innerHTML = '<div style="padding:40px;color:var(--muted)">加载中...</div>';
+    }
   } else {
     statusEl.textContent = '已启动，请等待 GitHub Actions 生成二维码（约10-30秒）...';
     document.getElementById('qr-image').innerHTML = '<div style="padding:40px;color:var(--muted)">加载中...</div>';
@@ -599,8 +605,11 @@ async function checkLoginStatus() {
   }
 
   const s = d.login_session;
-  if (s.qr_url) {
-    document.getElementById('qr-image').innerHTML = '<img src="' + escHtml(s.qr_url) + '" alt="QR Code" />';
+  var qrSrc = getQRImageSrc(s);
+  if (qrSrc) {
+    document.getElementById('qr-image').innerHTML = '<img src="' + qrSrc + '" alt="QR Code" />';
+  } else if (s.qr_url) {
+    document.getElementById('qr-image').innerHTML = '<div style="padding:40px;color:var(--muted)">二维码已生成，请在钉钉 App 中打开链接扫码</div>';
   }
 
   const statusMap = {
@@ -715,6 +724,11 @@ function formatBytes(b) {
 function escHtml(s) {
   if (s == null) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function getQRImageSrc(session) {
+  if (session.qr_image_base64) return 'data:image/png;base64,' + session.qr_image_base64;
+  return null;
 }
 
 function startPolling() {

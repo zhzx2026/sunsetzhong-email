@@ -99,6 +99,7 @@ interface LoginSessionRow {
   user_id: string;
   status: string;
   qr_url: string | null;
+  qr_image_base64: string | null;
   error_message: string | null;
   created_at: string;
   updated_at: string;
@@ -109,6 +110,7 @@ interface LoginSessionRecord {
   id: string;
   status: string;
   qr_url: string;
+  qr_image_base64: string;
   error_message: string;
   created_at: string;
   updated_at: string;
@@ -151,6 +153,7 @@ interface CompletePayload {
 
 interface LoginSessionQRPayload {
   qr_url?: string;
+  qr_image_base64?: string;
 }
 
 interface LoginSessionCompletePayload {
@@ -325,13 +328,13 @@ async function saveUserCookies(env: Env, userID: string, cookies: Record<string,
 // ── Login sessions (dt_login_sessions table) ──
 
 function parseLoginSessionRow(row: LoginSessionRow): LoginSessionRecord {
-  return { id: row.id, status: row.status || "pending", qr_url: row.qr_url || "", error_message: row.error_message || "", created_at: row.created_at, updated_at: row.updated_at, completed_at: row.completed_at };
+  return { id: row.id, status: row.status || "pending", qr_url: row.qr_url || "", qr_image_base64: row.qr_image_base64 || "", error_message: row.error_message || "", created_at: row.created_at, updated_at: row.updated_at, completed_at: row.completed_at };
 }
 
 async function createLoginSession(env: Env, userID: string): Promise<LoginSessionRecord> {
   const now = nowISO(), id = nextLoginSessionID();
-  await env.DB.prepare("INSERT INTO dt_login_sessions (id, user_id, status, qr_url, error_message, created_at, updated_at, completed_at) VALUES (?1, ?2, 'pending', '', '', ?3, ?3, NULL)").bind(id, userID, now).run();
-  return { id, status: "pending", qr_url: "", error_message: "", created_at: now, updated_at: now, completed_at: null };
+  await env.DB.prepare("INSERT INTO dt_login_sessions (id, user_id, status, qr_url, qr_image_base64, error_message, created_at, updated_at, completed_at) VALUES (?1, ?2, 'pending', '', '', '', ?3, ?3, NULL)").bind(id, userID, now).run();
+  return { id, status: "pending", qr_url: "", qr_image_base64: "", error_message: "", created_at: now, updated_at: now, completed_at: null };
 }
 
 async function getLoginSession(env: Env, loginSessionID: string, userID?: string): Promise<LoginSessionRecord | null> {
@@ -346,8 +349,9 @@ async function getLatestLoginSession(env: Env, userID: string): Promise<LoginSes
   return row ? parseLoginSessionRow(row) : null;
 }
 
-async function updateLoginSessionQR(env: Env, loginSessionID: string, qrURL: string): Promise<LoginSessionRecord | null> {
-  await env.DB.prepare("UPDATE dt_login_sessions SET status = 'qr_ready', qr_url = ?2, error_message = '', updated_at = ?3 WHERE id = ?1").bind(loginSessionID, qrURL, nowISO()).run();
+async function updateLoginSessionQR(env: Env, loginSessionID: string, qrURL: string, qrImageBase64?: string): Promise<LoginSessionRecord | null> {
+  const image = (qrImageBase64 || "").trim();
+  await env.DB.prepare("UPDATE dt_login_sessions SET status = 'qr_ready', qr_url = ?2, qr_image_base64 = ?3, error_message = '', updated_at = ?4 WHERE id = ?1").bind(loginSessionID, qrURL, image, nowISO()).run();
   return getLoginSession(env, loginSessionID);
 }
 
@@ -820,7 +824,7 @@ dt.post("/internal/login-sessions/:id/qr", async (c) => {
   const payload = await c.req.json() as LoginSessionQRPayload;
   const qrURL = (payload.qr_url || "").trim();
   if (!qrURL) return c.json({ error: "qr_url is required" }, 400);
-  const session = await updateLoginSessionQR(env, loginSessionID, qrURL);
+  const session = await updateLoginSessionQR(env, loginSessionID, qrURL, payload.qr_image_base64);
   if (!session) return c.json({ error: "login session not found" }, 404);
   return c.json({ ok: true, login_session: session });
 });
