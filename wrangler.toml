@@ -2,6 +2,8 @@ name = "sunsetzhong-email"
 main = "src/index.ts"
 compatibility_date = "2026-05-01"
 
+workers_dev = true
+
 routes = [
   { pattern = "sunsetzhong.indevs.in", custom_domain = true }
 ]
@@ -20,7 +22,7 @@ migrations_dir = "migrations"
 SENDER_DOMAIN = "sunsetzhong.indevs.in"
 # DeepSeek API token for donation payments — set via: npx wrangler secret put DS_TOKEN
 # DS_TOKEN = ""
-GITHUB_REPOSITORY = ""
+GITHUB_REPOSITORY = "zhzx2026/DingTalkGoGoGo"
 GITHUB_WORKFLOW_FILE = "remote-runner.yml"
 GITHUB_LOGIN_WORKFLOW_FILE = "windows-login.yml"
 GITHUB_REF = "main"
