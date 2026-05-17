@@ -1,8 +1,0 @@
-.git
-.github
-build
-video
-downloads
-.goDingtalkConfig
-worker/node_modules
-deploy/cloudflared/credentials.json
