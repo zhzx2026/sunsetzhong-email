@@ -18,6 +18,8 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.25'
+          cache: true
+          cache-dependency-path: DingTalkGoGoGo/go.sum
 
       - name: 运行 Go 测试
         working-directory: DingTalkGoGoGo

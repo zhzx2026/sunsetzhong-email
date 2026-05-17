@@ -48,6 +48,7 @@ jobs:
         with:
           go-version: '1.25'
           cache: true
+          cache-dependency-path: DingTalkGoGoGo/go.sum
 
       - name: 汇报进度（Go 就绪）
         continue-on-error: true
