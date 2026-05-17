@@ -22,8 +22,8 @@ android {
         applicationId = "in.indevs.sunsetzhong.email"
         minSdk = 26
         targetSdk = 35
-        versionCode = 225
-        versionName = "2.25"
+        versionCode = 226
+        versionName = "2.26"
 
         // Make BASE_URL configurable via build config
         buildConfigField("String", "BASE_URL", "\"https://sunsetzhong.indevs.in/\"")
