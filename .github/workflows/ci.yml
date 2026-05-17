@@ -20,24 +20,5 @@ jobs:
           go-version: '1.25'
 
       - name: 运行 Go 测试
+        working-directory: DingTalkGoGoGo
         run: go test ./...
-
-  worker-check:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: worker
-    steps:
-      - name: 检出代码
-        uses: actions/checkout@v4
-
-      - name: 配置 Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: 安装 Worker 依赖
-        run: npm install
-
-      - name: 检查 Worker TypeScript
-        run: npm run typecheck

@@ -34,6 +34,7 @@ jobs:
           cache: true
 
       - name: 构建 GoDingtalk
+        working-directory: DingTalkGoGoGo
         run: go build -o GoDingtalk.exe .
 
       - name: 执行 Windows 二维码登录并回传 Cookie
@@ -46,7 +47,7 @@ jobs:
           $workDir = "$env:RUNNER_TEMP\godingtalk-login"
           New-Item -ItemType Directory -Force -Path $workDir | Out-Null
 
-          $process = Start-Process -FilePath ".\GoDingtalk.exe" -ArgumentList @(
+          $process = Start-Process -FilePath ".\DingTalkGoGoGo\GoDingtalk.exe" -ArgumentList @(
             "-loginQR",
             "-chromeTimeout", "20",
             "-cookies", "$workDir\cookies.json",

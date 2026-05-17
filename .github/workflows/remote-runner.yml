@@ -36,13 +36,14 @@ jobs:
           cache: true
 
       - name: 构建 GoDingtalk
+        working-directory: DingTalkGoGoGo
         run: go build -o GoDingtalk .
 
       - name: 执行远程任务
         id: remote_job
         continue-on-error: true
         run: |
-          ./GoDingtalk \
+          ./DingTalkGoGoGo/GoDingtalk \
             -runRemoteJob \
             -controlURL "${CONTROL_URL}" \
             -internalToken "${INTERNAL_TOKEN}" \
