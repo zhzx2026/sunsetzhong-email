@@ -1,0 +1,54 @@
+plugins {
+  id "com.android.application"
+}
+
+def rawVersionName = System.getenv("GODINGTALK_APP_VERSION") ?: "0.1.0"
+def versionNameValue = rawVersionName.startsWith("v") ? rawVersionName.substring(1) : rawVersionName
+def versionCodeValue = Integer.parseInt(System.getenv("GODINGTALK_APP_VERSION_CODE") ?: "1")
+def consoleUrlValue = (System.getenv("GODINGTALK_CONSOLE_URL") ?: "")
+  .replace("\\", "\\\\")
+  .replace("\"", "\\\"")
+
+android {
+  namespace "com.godingtalk.console"
+  compileSdk 34
+
+  defaultConfig {
+    applicationId "com.godingtalk.console"
+    minSdk 26
+    targetSdk 34
+    versionCode versionCodeValue
+    versionName versionNameValue
+    buildConfigField "String", "DEFAULT_CONSOLE_URL", "\"${consoleUrlValue}\""
+  }
+
+  buildTypes {
+    debug {
+      applicationIdSuffix ".debug"
+      versionNameSuffix "-debug"
+    }
+    release {
+      minifyEnabled false
+      shrinkResources false
+      signingConfig signingConfigs.debug
+    }
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+
+  buildFeatures {
+    buildConfig true
+  }
+}
+
+configurations.configureEach {
+  exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib-jdk7"
+  exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib-jdk8"
+}
+
+dependencies {
+  implementation "androidx.appcompat:appcompat:1.7.0"
+}

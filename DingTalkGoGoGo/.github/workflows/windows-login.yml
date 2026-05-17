@@ -1,0 +1,110 @@
+name: Windows 二维码登录
+
+on:
+  workflow_dispatch:
+    inputs:
+      login_session_id:
+        description: Login session ID from Worker
+        required: true
+        type: string
+      owner_user_id:
+        description: Owner user ID (debug only)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  login:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      LOGIN_SESSION_ID: ${{ inputs.login_session_id }}
+      CONTROL_URL: ${{ secrets.GODINGTALK_CONTROL_URL }}
+      INTERNAL_TOKEN: ${{ secrets.GODINGTALK_INTERNAL_TOKEN }}
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 配置 Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+
+      - name: 构建 GoDingtalk
+        run: go build -o GoDingtalk.exe .
+
+      - name: 执行 Windows 二维码登录并回传 Cookie
+        shell: powershell
+        run: |
+          if (-not $env:CONTROL_URL -or -not $env:INTERNAL_TOKEN -or -not $env:LOGIN_SESSION_ID) {
+            exit 0
+          }
+
+          $workDir = "$env:RUNNER_TEMP\godingtalk-login"
+          New-Item -ItemType Directory -Force -Path $workDir | Out-Null
+
+          $process = Start-Process -FilePath ".\GoDingtalk.exe" -ArgumentList @(
+            "-loginQR",
+            "-chromeTimeout", "20",
+            "-cookies", "$workDir\cookies.json",
+            "-loginQRFile", "$workDir\login-qr.png"
+          ) -PassThru
+
+          $headers = @{ Authorization = "Bearer $env:INTERNAL_TOKEN" }
+          $qrUrlFile = "$workDir\login-qr-url.txt"
+          $cookiesFile = "$workDir\cookies.json"
+          $qrUrl = ""
+
+          for ($i = 0; $i -lt 120; $i++) {
+            if (Test-Path $qrUrlFile) {
+              $qrUrl = (Get-Content $qrUrlFile -Raw).Trim()
+              if ($qrUrl) { break }
+            }
+            Start-Sleep -Seconds 2
+          }
+
+          if (-not $qrUrl) {
+            Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+            $body = @{ error = "QR URL not found" } | ConvertTo-Json -Compress
+            Invoke-RestMethod -Method Post -Uri "$env:CONTROL_URL/internal/login-sessions/$env:LOGIN_SESSION_ID/complete" -Headers $headers -ContentType "application/json" -Body $body
+            exit 0
+          }
+
+          $qrPngFile = "$workDir\login-qr.png"
+          $qrImageBase64 = ""
+          if (Test-Path $qrPngFile) {
+            $qrImageBase64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes((Resolve-Path $qrPngFile)))
+          }
+          $qrBody = @{ qr_url = $qrUrl; qr_image_base64 = $qrImageBase64 } | ConvertTo-Json -Compress
+          Invoke-RestMethod -Method Post -Uri "$env:CONTROL_URL/internal/login-sessions/$env:LOGIN_SESSION_ID/qr" -Headers $headers -ContentType "application/json" -Body $qrBody
+
+          $loginSucceeded = $false
+          for ($i = 0; $i -lt 300; $i++) {
+            if (Test-Path $cookiesFile) {
+              $loginSucceeded = $true
+              break
+            }
+            if ($process.HasExited) { break }
+            Start-Sleep -Seconds 1
+            $process.Refresh()
+          }
+
+          if (-not $loginSucceeded) {
+            Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+            $body = @{ error = "QR code expired after 5 minutes without a completed scan" } | ConvertTo-Json -Compress
+            Invoke-RestMethod -Method Post -Uri "$env:CONTROL_URL/internal/login-sessions/$env:LOGIN_SESSION_ID/complete" -Headers $headers -ContentType "application/json" -Body $body
+            exit 0
+          }
+
+          if (Test-Path $cookiesFile) {
+            $cookies = Get-Content $cookiesFile -Raw | ConvertFrom-Json
+            $completeBody = @{ cookies = $cookies } | ConvertTo-Json -Compress -Depth 20
+            Invoke-RestMethod -Method Post -Uri "$env:CONTROL_URL/internal/login-sessions/$env:LOGIN_SESSION_ID/complete" -Headers $headers -ContentType "application/json" -Body $completeBody
+          } else {
+            $body = @{ error = "cookies file not found" } | ConvertTo-Json -Compress
+            Invoke-RestMethod -Method Post -Uri "$env:CONTROL_URL/internal/login-sessions/$env:LOGIN_SESSION_ID/complete" -Headers $headers -ContentType "application/json" -Body $body
+            exit 0
+          }

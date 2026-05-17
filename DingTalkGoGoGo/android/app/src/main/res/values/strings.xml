@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">GoDingtalk</string>
+  <string name="app_subtitle">Private Console</string>
+  <string name="server_title">输入控制台地址</string>
+  <string name="server_hint">如果发布时已预置地址，应用会直接打开工作台；否则首次启动在这里填一次即可。</string>
+  <string name="server_placeholder">https://your-worker.example.com</string>
+  <string name="open_console_button">打开工作台</string>
+  <string name="change_server_button">切换地址</string>
+  <string name="invalid_server_url">请输入有效的控制台地址</string>
+  <string name="load_failed">页面加载失败，请检查控制台地址或网络</string>
+  <string name="download_description">GoDingtalk 文件下载</string>
+  <string name="download_started">开始下载：%1$s</string>
+  <string name="open_external_failed">无法打开链接</string>
+</resources>

@@ -1,0 +1,98 @@
+name: 远程任务执行
+
+on:
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: Job ID from the Worker control plane
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  run-job:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      JOB_ID: ${{ inputs.job_id }}
+      CONTROL_URL: ${{ secrets.GODINGTALK_CONTROL_URL }}
+      INTERNAL_TOKEN: ${{ secrets.GODINGTALK_INTERNAL_TOKEN }}
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 ffmpeg 和 7z
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg p7zip-full
+
+      - name: 配置 Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+
+      - name: 构建 GoDingtalk
+        run: go build -o GoDingtalk .
+
+      - name: 执行远程任务
+        id: remote_job
+        continue-on-error: true
+        run: |
+          ./GoDingtalk \
+            -runRemoteJob \
+            -controlURL "${CONTROL_URL}" \
+            -internalToken "${INTERNAL_TOKEN}" \
+            -jobID "${JOB_ID}" \
+            -saveDir "${RUNNER_TEMP}/godingtalk" \
+            -resultFile "${RUNNER_TEMP}/job-result.json"
+
+      - name: 上传加密视频到 Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.job_id }}
+          path: ${{ runner.temp }}/godingtalk/**/*.zip
+          retention-days: 90
+          if-no-files-found: ignore
+
+      - name: 回写远程任务最终状态
+        if: always()
+        continue-on-error: true
+        run: |
+          RESULT_FILE="${RUNNER_TEMP}/job-result.json"
+          COMPLETE_FILE="${RUNNER_TEMP}/job-complete.json"
+
+          if [ -f "${RESULT_FILE}" ]; then
+            # Build files list with artifact_name = job_id for the zip
+            ARTIFACT_NAME="${JOB_ID}"
+            FILES_JSON=$(jq --arg an "${ARTIFACT_NAME}" \
+              '(.files // []) | map(. + {artifact_name: $an})' \
+              "${RESULT_FILE}")
+            jq \
+              --argjson files "${FILES_JSON}" \
+              '{
+                status: .status,
+                stage: (if .status != "succeeded" then "failed" else "completed" end),
+                titles: .titles,
+                errors: .errors,
+                files: $files,
+                progress_percent: (if .status != "succeeded" then 0 else 100 end)
+              }' \
+              "${RESULT_FILE}" > "${COMPLETE_FILE}"
+          else
+            jq -n \
+              --arg status "failed" \
+              --arg stage "failed" \
+              --arg message "GitHub Actions runner failed before producing a manifest. Inspect the workflow logs." \
+              '{status:$status, stage:$stage, errors:[$message], files:[], progress_percent:0}' > "${COMPLETE_FILE}"
+          fi
+
+          curl -sS --fail \
+            -X POST "${CONTROL_URL}/internal/jobs/${JOB_ID}/complete" \
+            -H "Authorization: Bearer ${INTERNAL_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data @"${COMPLETE_FILE}"

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <color name="gd_background">#FFF4EDE4</color>
+  <color name="gd_surface">#FFFFFBF7</color>
+  <color name="gd_text">#FF1F140B</color>
+  <color name="gd_muted">#FF6E5A48</color>
+</resources>

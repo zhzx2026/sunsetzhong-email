@@ -1,0 +1,26 @@
+services:
+  godingtalk:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: godingtalk-server
+    restart: unless-stopped
+    environment:
+      GODINGTALK_SERVER_AUTH_TOKEN: change-this-origin-token
+      GODINGTALK_PUBLIC_BASE_URL: https://api.example.com
+      GODINGTALK_SERVER_MAX_CONCURRENT_JOBS: "1"
+    volumes:
+      - ./data:/data
+    expose:
+      - "8080"
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: godingtalk-tunnel
+    restart: unless-stopped
+    depends_on:
+      - godingtalk
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./deploy/cloudflared/config.yml:/etc/cloudflared/config.yml:ro
+      - ./deploy/cloudflared/credentials.json:/etc/cloudflared/credentials.json:ro
