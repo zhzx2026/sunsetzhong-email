@@ -37,6 +37,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 .side-foot .rl{font-size:11px;color:var(--muted)}
 .btn-sm{background:none;border:none;cursor:pointer;color:var(--muted);padding:4px 8px;border-radius:6px;font-size:12px;transition:.1s}
 .btn-sm:hover{background:var(--hover);color:var(--text)}
+.toolbar-search{width:140px;height:30px;border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-family:var(--font);font-size:13px;outline:none;background:var(--bg);color:var(--text);transition:.15s}
+.toolbar-search:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+@media(max-width:720px){.toolbar-search{width:90px;font-size:12px}}
 .switch{position:relative;width:48px;height:28px;cursor:pointer;display:inline-block}
 .switch input{opacity:0;width:0;height:0}
 .switch .sl{position:absolute;inset:0;background:var(--border);border-radius:14px;transition:.2s}
@@ -210,6 +213,32 @@ function mobileNav(){if(window.innerWidth<=720)closeSidebar()}
   function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
   function ts(iso){if(!iso)return'';const d=new Date(iso),n=new Date();if(d.toDateString()===n.toDateString())return d.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false});return(d.getMonth()+1)+'/'+d.getDate()}
   function snip(t){return(t||'').replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim().slice(0,80)}
+  let searchFilter='';
+  function onSearchKey(e){
+    if(e.key!=='Enter')return;
+    const v=e.target.value.trim().toLowerCase();
+    if(v==='dingtalk'){location.href='/dingtalk';return}
+    if(v==='admin'||v==='管理'){if(user.role==='admin')load('admin');return}
+    if(v==='settings'||v==='设置'){load('settings');return}
+    if(v==='addresses'||v==='地址'){load('addresses');return}
+  }
+  function onSearchInput(v){
+    searchFilter=v.toLowerCase();
+    updateEmailList();
+  }
+  function updateEmailList(){
+    const rows=document.querySelectorAll('.mail-row');
+    if(!rows.length)return;
+    let visible=0;
+    rows.forEach(row=>{
+      if(!searchFilter){row.style.display='';visible++;return}
+      const text=(row.textContent||'').toLowerCase();
+      if(text.includes(searchFilter)){row.style.display='';visible++}
+      else row.style.display='none';
+    });
+    const cnt=document.querySelector('.toolbar .cnt');
+    if(cnt)cnt.textContent=visible+(searchFilter?'/'+rows.length:'')+t('count');
+  }
 
   // Update hardcoded UI text for current language
   function localizeUI(){
@@ -266,7 +295,11 @@ function mobileNav(){if(window.innerWidth<=720)closeSidebar()}
   function showOffline(){
     main.innerHTML='<div class="view"><div class="empty" style="padding-top:60px"><div class="empty-icon">📡</div><p>'+t('offline')+'</p><p style="font-size:13px;color:var(--muted);margin-top:8px">检查网络连接后重试</p><button class="btn-primary" onclick="location.reload()" style="margin-top:18px;padding:10px 28px">'+t('refresh')+'</button></div></div>';
   }
-  try{const r=await fetch('/api/auth/me'),d=await r.json();if(!d.ok||!d.user){location.href='/login';return}user=d.user}catch{showOffline();return}
+  // Listen for network state changes
+  window.addEventListener('online',()=>{tmsg('网络已恢复',true);if(!user)location.reload()});
+  window.addEventListener('offline',()=>tmsg('网络已断开',false));
+  if(!navigator.onLine){showOffline();return}
+  try{const r=await fetch('/api/auth/me'),d=await r.json();if(!d.ok||!d.user){if(navigator.onLine){location.href='/login'}else{showOffline()}return}user=d.user}catch{if(!navigator.onLine)showOffline();else location.href='/login';return}
   document.getElementById('userAv').textContent=user.username[0].toUpperCase();
   document.getElementById('userNm').textContent=user.username;
   document.getElementById('userRl').textContent=user.role;
@@ -307,15 +340,16 @@ function mobileNav(){if(window.innerWidth<=720)closeSidebar()}
   function rList(mails){
     const label=t(folder==='sent'?'sent':'inbox');
     const selAllChecked=selectAllOn&&mails.length>0;
-    if(!mails.length) return '<div class="view"><div class="toolbar">'+HB+'<h2>'+label+'</h2><span class="cnt">&nbsp;</span><span class="spacer"></span><button class="btn-icon" id="btnRefresh" title="'+t('refresh')+'">↻</button></div><div class="empty"><div class="empty-icon">'+(folder==='sent'?'📤':'📭')+'</div><p>'+(folder==='sent'?t('empty_sent'):t('empty_inbox'))+'</p></div></div>';
+    const searchHTML='<input class="toolbar-search" type="text" placeholder="搜索…" id="toolbarSearch" onkeydown="return onSearchKey(event)" oninput="onSearchInput(this.value)">';
+    if(!mails.length) return '<div class="view"><div class="toolbar">'+HB+'<h2>'+label+'</h2><span class="cnt">&nbsp;</span><span class="spacer"></span>'+searchHTML+'<button class="btn-icon" id="btnRefresh" title="'+t('refresh')+'">↻</button></div><div class="empty"><div class="empty-icon">'+(folder==='sent'?'📤':'📭')+'</div><p>'+(folder==='sent'?t('empty_sent'):t('empty_inbox'))+'</p></div></div>';
     const selAllHTML='<div class="cb'+(selAllChecked?' checked':'')+'" id="cbSelectAll" title="'+(selAllChecked?'取消全选':'全选')+'" onclick="event.stopPropagation()"></div>';
-    return '<div class="view"><div class="toolbar">'+HB+'<h2>'+label+'</h2>'+selAllHTML+'<span class="cnt">'+mails.length+t('count')+'</span><span class="spacer"></span><button class="btn-icon" id="btnRefresh" title="'+t('refresh')+'">↻</button></div><div class="list">'+mails.map(m=>{const a=folder==='sent'?(m.address||''):(m.source||'');const ck=selectedIds.has(m.id);return'<div class="mail-row'+(ck?' selected':'')+'" data-id="'+m.id+'"><div class="cb'+(ck?' checked':'')+'" data-cb="1"></div><div class="avatar" style="background:'+color(a)+'">'+esc(av(a))+'</div><div class="mail-content"><div class="mail-line"><span class="mail-from">'+esc(a)+'</span><span class="mail-subj">'+esc(m.subject||t('nosubject'))+' <span class="mail-snip">— '+esc(snip(m.body_text))+'</span></span><span class="mail-time">'+esc(ts(m.created_at))+'</span></div></div></div>'}).join('')+'</div></div>';
+    return '<div class="view"><div class="toolbar">'+HB+'<h2>'+label+'</h2>'+selAllHTML+'<span class="cnt">'+mails.length+t('count')+'</span><span class="spacer"></span>'+searchHTML+'<button class="btn-icon" id="btnRefresh" title="'+t('refresh')+'">↻</button></div><div class="list">'+mails.map(m=>{const a=folder==='sent'?(m.address||''):(m.source||'');const ck=selectedIds.has(m.id);return'<div class="mail-row'+(ck?' selected':'')+'" data-id="'+m.id+'"><div class="cb'+(ck?' checked':'')+'" data-cb="1"></div><div class="avatar" style="background:'+color(a)+'">'+esc(av(a))+'</div><div class="mail-content"><div class="mail-line"><span class="mail-from">'+esc(a)+'</span><span class="mail-subj">'+esc(m.subject||t('nosubject'))+' <span class="mail-snip">— '+esc(snip(m.body_text))+'</span></span><span class="mail-time">'+esc(ts(m.created_at))+'</span></div></div></div>'}).join('')+'</div></div>';
   }
 
   function rDetail(mail){
     const a=folder==='sent'?(mail.address||''):(mail.source||'');
     const isInbound=folder==='inbox';
-    return '<div class="detail"><div class="toolbar">'+HB+'<button class="btn-icon" id="btnBack" title="'+t('back')+'">←</button><span class="spacer"></span>'+(isInbound?'<button class="btn-icon" id="btnReply" title="'+t('reply')+'">↩</button>':'')+'<button class="btn-icon danger" id="btnDelete" title="'+t('del')+'">🗑</button></div><div class="detail-hd"><div class="detail-subj">'+esc(mail.subject||t('nosubject'))+'</div><div class="detail-meta"><div class="avatar" style="background:'+color(a)+'">'+esc(av(a))+'</div><div style="flex:1"><div style="font-weight:600;font-size:14px">'+esc(a)+'</div><div style="font-size:12px;color:var(--muted)">'+t('to_label')+' '+esc(mail.address||'')+' · '+new Date(mail.created_at).toLocaleString(lang==='en'?'en-US':'zh-CN')+'</div></div></div></div><div class="detail-body" id="detailBody"></div></div>';
+    return '<div class="detail"><div class="toolbar">'+HB+'<button class="btn-icon" id="btnBack" title="'+t('back')+'">←</button><span class="spacer"></span><input class="toolbar-search" type="text" placeholder="搜索…" onkeydown="return onSearchKey(event)" oninput="onSearchInput(this.value)">'+(isInbound?'<button class="btn-icon" id="btnReply" title="'+t('reply')+'">↩</button>':'')+'<button class="btn-icon danger" id="btnDelete" title="'+t('del')+'">🗑</button></div><div class="detail-hd"><div class="detail-subj">'+esc(mail.subject||t('nosubject'))+'</div><div class="detail-meta"><div class="avatar" style="background:'+color(a)+'">'+esc(av(a))+'</div><div style="flex:1"><div style="font-weight:600;font-size:14px">'+esc(a)+'</div><div style="font-size:12px;color:var(--muted)">'+t('to_label')+' '+esc(mail.address||'')+' · '+new Date(mail.created_at).toLocaleString(lang==='en'?'en-US':'zh-CN')+'</div></div></div></div><div class="detail-body" id="detailBody"></div></div>';
   }
 
   function toggleSelect(id){
@@ -370,6 +404,7 @@ function mobileNav(){if(window.innerWidth<=720)closeSidebar()}
       e.addEventListener('touchend',()=>{if(lpTimer){clearTimeout(lpTimer);lpTimer=null}lpTarget=null});
       e.addEventListener('touchmove',()=>{if(lpTimer){clearTimeout(lpTimer);lpTimer=null}lpTarget=null});
     });
+    updateEmailList();
   }
 
   async function load(f){
@@ -381,7 +416,7 @@ function mobileNav(){if(window.innerWidth<=720)closeSidebar()}
     if(f==='admin'){await loadAdmin();return}
     if(f==='dingtalk'){location.href='/dingtalk';return}
     const tLabel=t(f==='sent'?'sent':'inbox');
-    main.innerHTML='<div class="view"><div class="toolbar">'+HB+'<h2>'+tLabel+'</h2><span class="cnt">&nbsp;</span><span class="spacer"></span><button class="btn-icon" id="btnRefresh" title="'+t('refresh')+'">↻</button></div><div class="loading"><div class="spin"></div></div></div>';
+    main.innerHTML='<div class="view"><div class="toolbar">'+HB+'<h2>'+tLabel+'</h2><span class="cnt">&nbsp;</span><span class="spacer"></span><input class="toolbar-search" type="text" placeholder="搜索…" onkeydown="return onSearchKey(event)" oninput="onSearchInput(this.value)"><button class="btn-icon" id="btnRefresh" title="'+t('refresh')+'">↻</button></div><div class="loading"><div class="spin"></div></div></div>';
     reBindToolbar();
     try{const r=await fetch('/api/'+f),d=await r.json();if(!d.ok)throw new Error(d.error);cache[f]=(d.items||[]).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));const ce=f==='inbox'?document.getElementById('inboxCount'):document.getElementById('sentCount');if(ce)ce.textContent=cache[f].length||'—';main.innerHTML=rList(cache[f]);bindList()}catch(e){main.innerHTML=rList([]);bindList();tmsg(e.message,false)}
     loadContacts(); startPoll();
@@ -389,7 +424,7 @@ function mobileNav(){if(window.innerWidth<=720)closeSidebar()}
 
   async function open(id){
     stopPoll(); const fold=folder;
-    main.innerHTML='<div class="detail"><div class="toolbar">'+HB+'<span class="spacer"></span></div><div class="loading"><div class="spin"></div></div></div>';
+    main.innerHTML='<div class="detail"><div class="toolbar">'+HB+'<span class="spacer"></span><input class="toolbar-search" type="text" placeholder="搜索…" onkeydown="return onSearchKey(event)" oninput="onSearchInput(this.value)"></div><div class="loading"><div class="spin"></div></div></div>';
     try{const r=await fetch('/api/mail/'+id),d=await r.json();if(!d.ok||!d.data)throw new Error('not found');detailMail=d.data;main.innerHTML=rDetail(detailMail);
       document.getElementById('btnBack').onclick=()=>{detailMail=null;load(fold)};
       document.getElementById('btnDelete').onclick=()=>del(id);
