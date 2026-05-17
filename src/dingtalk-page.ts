@@ -185,8 +185,8 @@ button:disabled{background:#94a3b8;cursor:not-allowed;transform:none;box-shadow:
   </div>
   <div class="nav">
     <div class="nav-group-label">主菜单</div>
-    <div class="nav-item active" data-page="overview" onclick="navigate('overview')"><span class="nav-dot">◉</span>仪表盘</div>
-    <div class="nav-item" data-page="jobs" onclick="navigate('jobs')"><span class="nav-dot">☰</span>详细记录</div>
+    <div class="nav-item active" data-page="overview" onclick="navigate('overview')"><span class="nav-dot">○</span>仪表盘</div>
+    <div class="nav-item" data-page="jobs" onclick="navigate('jobs')"><span class="nav-dot">○</span>详细记录</div>
     <div class="nav-group-label">设置</div>
     <div class="nav-item" data-page="legal" onclick="navigate('legal')"><span class="nav-dot" id="step-legal">1</span>条款确认<span class="nav-step-badge no" id="badge-legal">未完成</span></div>
     <div class="nav-item" data-page="qr" onclick="navigate('qr')"><span class="nav-dot" id="step-qr">2</span>钉钉验证<span class="nav-step-badge no" id="badge-qr">未完成</span></div>
@@ -536,7 +536,7 @@ function jobRowHTML(job, expanded) {
     '</div>' +
     '<div class="job-meta"><span>' + dt + '</span><span>线程: ' + job.thread + '</span><span>进度: ' + job.completed_parts + '/' + job.total_parts + '</span></div>' +
     downloadBtn + cancelBtn + deleteBtn +
-    (pct > 0 ? '<div class="job-progress-bar"><div class="job-progress-fill" style="width:' + pct + '%"></div></div>' : '') +
+    ((job.status === 'running' || job.status === 'queued') ? '<div class="job-progress-bar"><div class="job-progress-fill" style="width:' + (pct || 5) + '%"></div></div><div style="font-size:11px;color:var(--muted);margin-top:2px">' + escHtml(job.stage || '等待中') + ' — ' + (pct || 0) + '%</div>' : '') +
     (errors.length ? '<div style="font-size:12px;color:#dc2626;margin-top:6px">' + errors.join('; ') + '</div>' : '') +
     '<div class="job-detail">' + filesHtml + eventsHtml + '</div>' +
   '</div>';
@@ -928,10 +928,11 @@ function startPolling() {
     if (document.getElementById('page-overview').classList.contains('active')) {
       renderMetrics();
       renderStatus();
-      if (state.recentJobs) {
-        const r = await api('/dingtalk/jobs?page_size=5');
-        if (r && JSON.stringify(r.jobs) !== JSON.stringify(state.recentJobs)) loadRecentJobs();
-      }
+      loadRecentJobs();
+    }
+    // Refresh jobs list if on jobs page
+    if (document.getElementById('page-jobs').classList.contains('active')) {
+      loadJobs(state.currentPage);
     }
     // Auto-refresh expanded job details
     var expanded = document.querySelector('.job-item.expanded');
@@ -947,13 +948,10 @@ function startPolling() {
         }
       }
     }
-    if (s.cookies_ready && s.legal_accepted && s.has_zip_password) {
-      // All gates passed, stop polling sidebar badges
-    }
     if (document.getElementById('page-qr').classList.contains('active') && state.loginSession) {
       if (state.loginSession.status !== 'completed') await checkLoginStatus();
     }
-  }, 3000);
+  }, 2000);
 }
 
 // Hash-based routing
