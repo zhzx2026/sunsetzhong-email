@@ -731,6 +731,18 @@ dt.post("/jobs/:id/cancel", async (c) => {
   return c.json({ ok: true });
 });
 
+// ── Delete job ──
+dt.delete("/jobs/:id", async (c) => {
+  const u = getUser(c);
+  const env = c.env as Env;
+  const jobID = c.req.param("id");
+  const job = await getJob(env, jobID, u.id);
+  if (!job) return c.json({ error: "job not found" }, 404);
+  await env.DB.prepare("DELETE FROM dt_job_events WHERE job_id = ?1").bind(jobID).run();
+  await env.DB.prepare("DELETE FROM dt_jobs WHERE id = ?1").bind(jobID).run();
+  return c.json({ ok: true });
+});
+
 // ── File download (artifact proxy) ──
 dt.get("/files", async (c) => {
   const u = getUser(c);

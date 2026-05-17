@@ -525,6 +525,9 @@ function jobRowHTML(job, expanded) {
     cancelBtn = '<button class="btn-ghost btn-sm" style="margin-top:8px;color:var(--red);border-color:var(--red)" onclick="event.stopPropagation();cancelJob(\\'' + job.id + '\\')">取消任务</button>';
   }
 
+  // Delete button (always shown, for cleanup)
+  var deleteBtn = '<button class="btn-ghost btn-sm" style="margin-top:8px;margin-left:6px;color:var(--muted)" onclick="event.stopPropagation();deleteJob(\\'' + job.id + '\\')">删除</button>';
+
   return '<div class="job-item' + (expanded ? ' expanded' : '') + '" data-job-id="' + job.id + '" onclick="toggleJob(this,&quot;' + job.id + '&quot;)">' +
     '<div class="job-header">' +
       '<span class="job-id">' + job.id.slice(0,20) + '...</span>' +
@@ -532,7 +535,7 @@ function jobRowHTML(job, expanded) {
       '<span class="job-status ' + cls + '">' + label + '</span>' +
     '</div>' +
     '<div class="job-meta"><span>' + dt + '</span><span>线程: ' + job.thread + '</span><span>进度: ' + job.completed_parts + '/' + job.total_parts + '</span></div>' +
-    downloadBtn + cancelBtn +
+    downloadBtn + cancelBtn + deleteBtn +
     (pct > 0 ? '<div class="job-progress-bar"><div class="job-progress-fill" style="width:' + pct + '%"></div></div>' : '') +
     (errors.length ? '<div style="font-size:12px;color:#dc2626;margin-top:6px">' + errors.join('; ') + '</div>' : '') +
     '<div class="job-detail">' + filesHtml + eventsHtml + '</div>' +
@@ -623,6 +626,19 @@ async function cancelJob(jobId) {
     showOverview();
   } else {
     toast(d?.error || '取消失败', 'err');
+  }
+}
+
+async function deleteJob(jobId) {
+  if (!confirm('确定要删除此任务记录吗？')) return;
+  var d = await api('/dingtalk/jobs/' + jobId, { method: 'DELETE' });
+  if (d && d.ok) {
+    toast('已删除', 'info');
+    await loadStatus();
+    showOverview();
+    if (document.getElementById('page-jobs').classList.contains('active')) loadJobs(state.currentPage);
+  } else {
+    toast(d?.error || '删除失败', 'err');
   }
 }
 
