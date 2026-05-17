@@ -13,6 +13,7 @@ import androidx.core.content.FileProvider
 import androidx.work.*
 import dev.indevs.sunsetzhong.email.BuildConfig
 import dev.indevs.sunsetzhong.email.MainActivity
+import dev.indevs.sunsetzhong.email.R
 import dev.indevs.sunsetzhong.email.SdMailApp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
