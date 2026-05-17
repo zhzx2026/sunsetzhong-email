@@ -5,3 +5,7 @@ dist/
 *.log
 DingTalkGoGoGo/
 .DS_Store
+**/.gradle/
+**/build/
+*.keystore
+*.apk
