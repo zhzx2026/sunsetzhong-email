@@ -977,6 +977,36 @@ window.addEventListener('popstate', function() {
 });
 
 checkAuth();
+
+// Service Worker update detection
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(function(reg) {
+    navigator.serviceWorker.addEventListener('message', function(e) {
+      if (e.data.type === 'update') {
+        var bar = document.createElement('div');
+        bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:var(--blue,#2563eb);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,.1);transform:translateY(-100%);transition:transform .3s';
+        bar.innerHTML = '<span style="flex:1;font-weight:500">有新版本可用</span><button style="margin-left:auto;background:#fff;color:var(--blue,#2563eb);border:none;border-radius:8px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer">刷新</button>';
+        bar.querySelector('button').onclick = function() { location.reload(); };
+        document.body.appendChild(bar);
+        requestAnimationFrame(function() { bar.style.transform = 'translateY(0)'; });
+      }
+      if (e.data.type === 'reload') location.reload();
+    });
+    reg.addEventListener('updatefound', function() {
+      var newWorker = reg.installing;
+      newWorker && newWorker.addEventListener('statechange', function() {
+        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          var bar = document.createElement('div');
+          bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:var(--blue,#2563eb);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,.1);transform:translateY(-100%);transition:transform .3s';
+          bar.innerHTML = '<span style="flex:1;font-weight:500">新版本已就绪</span><button style="margin-left:auto;background:#fff;color:var(--blue,#2563eb);border:none;border-radius:8px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer">刷新</button>';
+          bar.querySelector('button').onclick = function() { newWorker.postMessage('skipWaiting'); location.reload(); };
+          document.body.appendChild(bar);
+          requestAnimationFrame(function() { bar.style.transform = 'translateY(0)'; });
+        }
+      });
+    });
+  });
+}
 </script>
 </body>
 </html>`;
