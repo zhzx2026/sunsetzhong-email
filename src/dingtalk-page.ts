@@ -330,23 +330,27 @@ async function checkAuth() {
 
 async function init() {
   if (state.user.isSudo) document.querySelectorAll('.admin-only').forEach(el => el.classList.add('show'));
-  await loadStatus();
-  await loadLegal();
-  updateSidebarBadges();
-  // Respect hash-based routing on initial load
-  var hash = location.hash.replace(/^#/, '');
-  if (hash === 'legal' || hash === 'qr' || hash === 'password' || hash === 'admin') {
+
+  var hash = location.hash.replace(/^#/, '') || 'overview';
+  // Show page shell immediately for instant feedback
+  if (hash === 'legal' || hash === 'qr' || hash === 'password' || hash === 'admin' || hash === 'jobs') {
     navigate(hash);
-    if (hash !== 'admin') startPolling();
-    return;
   }
-  if (state.status && !state.status.legal_accepted) { showGate('legal'); return; }
-  if (state.status && !state.status.cookies_ready) { showGate('qr'); return; }
-  if (state.status && !state.status.has_zip_password) { showGate('password'); return; }
-  var hash = location.hash.replace(/^#/, '');
-  if (hash === 'jobs') { navigate('jobs'); startPolling(); return; }
-  showOverview();
-  startPolling();
+
+  // Load status & legal in parallel
+  await Promise.all([loadStatus(), loadLegal()]);
+  updateSidebarBadges();
+
+  // Check gates (skip gate if user is already on the relevant setup page)
+  if (state.status && !state.status.legal_accepted && hash !== 'legal') { showGate('legal'); return; }
+  if (state.status && !state.status.cookies_ready && hash !== 'qr') { showGate('qr'); return; }
+  if (state.status && !state.status.has_zip_password && hash !== 'password') { showGate('password'); return; }
+
+  // All gates passed: show target page
+  if (hash === 'jobs') { loadJobs(1); }
+  else if (hash !== 'legal' && hash !== 'qr' && hash !== 'password' && hash !== 'admin') { showOverview(); }
+
+  if (hash !== 'admin') startPolling();
 }
 
 async function loadStatus() {
