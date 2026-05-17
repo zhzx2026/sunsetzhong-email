@@ -10,6 +10,7 @@
 - **前端**: 单页应用 (SPA)，PWA，Service Worker 推送
 - **移动端**: Android Trusted Web Activity (TWA)
 - **邮件**: Resend API (发件) + Cloudflare Email Workers (收件)
+- **钉钉下载**: Go Runner + GitHub Actions 远程执行，7z 加密打包，Artifacts 存储
 
 ## 命令
 
@@ -28,11 +29,16 @@ src/
 public/              # SPA 静态资源 (index.html, sw.js, manifest.json)
 migrations/          # D1 数据库迁移文件
 apk/EmailApp/        # Android TWA 应用
+DingTalkGoGoGo/      # 钉钉视频下载 Go Runner
+  M3u8Downloader/    # M3U8 解析与下载库
+  main.go            # CLI 入口
+  remote_runner.go   # GitHub Actions 远程任务执行
+  server.go          # Web 控制面板
+  android/           # Android 辅助应用
+.github/workflows/   # GitHub Actions
+  remote-runner.yml  # 远程下载任务
+  windows-login.yml  # Windows 二维码登录
 ```
-
-## 相关项目
-
-- [DingTalkGoGoGo](https://github.com/zhzx2026/DingTalkGoGoGo) — 钉钉视频下载 Go Runner，通过 GitHub Actions 远程执行
 
 ## 环境变量 / Secrets
 
@@ -48,4 +54,4 @@ apk/EmailApp/        # Android TWA 应用
 
 `wrangler.toml` 中的静态变量：
 - `SENDER_DOMAIN` = `sunsetzhong.indevs.in`
-- `GITHUB_REPOSITORY` = `zhzx2026/DingTalkGoGoGo`
+- `GITHUB_REPOSITORY` = `zhzx2026/sunsetzhong-email`
