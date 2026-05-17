@@ -12,6 +12,12 @@ import (
 	"strings"
 )
 
+const (
+	jobStatusSucceeded = "succeeded"
+	jobStatusRunning   = "running"
+	jobStatusFailed    = "failed"
+)
+
 type remoteJobClaim struct {
 	ID              string            `json:"id"`
 	URLs            []string          `json:"urls"`

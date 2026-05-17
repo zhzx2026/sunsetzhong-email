@@ -1045,14 +1045,8 @@ func main() {
 	}
 
 	if *serveFlag {
-		if *saveDir != "" {
-			config.SaveDirectory = *saveDir
-		}
-		if err := runServer(config); err != nil {
-			fmt.Printf("错误: 启动服务失败: %v\n", err)
-			os.Exit(1)
-		}
-		return
+		fmt.Println("HTTP 服务模式已移除，请使用 remote-runner workflow")
+		os.Exit(1)
 	}
 
 	// 参数验证

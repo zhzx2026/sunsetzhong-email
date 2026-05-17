@@ -185,8 +185,8 @@ button:disabled{background:#94a3b8;cursor:not-allowed;transform:none;box-shadow:
   </div>
   <div class="nav">
     <div class="nav-group-label">主菜单</div>
-    <div class="nav-item active" data-page="overview" onclick="navigate('overview')"><span class="nav-dot">1</span>仪表盘</div>
-    <div class="nav-item" data-page="jobs" onclick="navigate('jobs')"><span class="nav-dot">4</span>详细记录</div>
+    <div class="nav-item active" data-page="overview" onclick="navigate('overview')"><span class="nav-dot">◉</span>仪表盘</div>
+    <div class="nav-item" data-page="jobs" onclick="navigate('jobs')"><span class="nav-dot">☰</span>详细记录</div>
     <div class="nav-group-label">设置</div>
     <div class="nav-item" data-page="legal" onclick="navigate('legal')"><span class="nav-dot" id="step-legal">1</span>条款确认<span class="nav-step-badge no" id="badge-legal">未完成</span></div>
     <div class="nav-item" data-page="qr" onclick="navigate('qr')"><span class="nav-dot" id="step-qr">2</span>钉钉验证<span class="nav-step-badge no" id="badge-qr">未完成</span></div>
