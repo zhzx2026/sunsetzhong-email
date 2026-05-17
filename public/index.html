@@ -192,6 +192,32 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 function toggleSidebar(){const s=document.getElementById('sidebar');const o=document.getElementById('sidebarOverlay');s.classList.toggle('open');o.classList.toggle('visible')}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('visible')}
 function mobileNav(){if(window.innerWidth<=720)closeSidebar()}
+var searchFilter='';
+function onSearchKey(e){
+  if(e.key!=='Enter')return;
+  var v=e.target.value.trim().toLowerCase();
+  if(v==='dingtalk'){location.href='/dingtalk';return}
+  if(v==='admin'||v==='管理'){if(window.__smailUser&&window.__smailUser.role==='admin')window.__load('admin');return}
+  if(v==='settings'||v==='设置'){window.__load('settings');return}
+  if(v==='addresses'||v==='地址'){window.__load('addresses');return}
+}
+function onSearchInput(v){
+  searchFilter=v.toLowerCase();
+  updateEmailList();
+}
+function updateEmailList(){
+  var rows=document.querySelectorAll('.mail-row');
+  if(!rows.length)return;
+  var visible=0;
+  rows.forEach(function(row){
+    if(!searchFilter){row.style.display='';visible++;return}
+    var text=(row.textContent||'').toLowerCase();
+    if(text.indexOf(searchFilter)>=0){row.style.display='';visible++}
+    else row.style.display='none';
+  });
+  var cnt=document.querySelector('.toolbar .cnt');
+  if(cnt)cnt.textContent=visible+(searchFilter?'/'+rows.length:'')+window.__t('count');
+}
 </script>
 
 <script>
@@ -213,32 +239,11 @@ function mobileNav(){if(window.innerWidth<=720)closeSidebar()}
   function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
   function ts(iso){if(!iso)return'';const d=new Date(iso),n=new Date();if(d.toDateString()===n.toDateString())return d.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false});return(d.getMonth()+1)+'/'+d.getDate()}
   function snip(t){return(t||'').replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim().slice(0,80)}
-  let searchFilter='';
-  function onSearchKey(e){
-    if(e.key!=='Enter')return;
-    const v=e.target.value.trim().toLowerCase();
-    if(v==='dingtalk'){location.href='/dingtalk';return}
-    if(v==='admin'||v==='管理'){if(user.role==='admin')load('admin');return}
-    if(v==='settings'||v==='设置'){load('settings');return}
-    if(v==='addresses'||v==='地址'){load('addresses');return}
-  }
-  function onSearchInput(v){
-    searchFilter=v.toLowerCase();
-    updateEmailList();
-  }
-  function updateEmailList(){
-    const rows=document.querySelectorAll('.mail-row');
-    if(!rows.length)return;
-    let visible=0;
-    rows.forEach(row=>{
-      if(!searchFilter){row.style.display='';visible++;return}
-      const text=(row.textContent||'').toLowerCase();
-      if(text.includes(searchFilter)){row.style.display='';visible++}
-      else row.style.display='none';
-    });
-    const cnt=document.querySelector('.toolbar .cnt');
-    if(cnt)cnt.textContent=visible+(searchFilter?'/'+rows.length:'')+t('count');
-  }
+
+  // Expose for inline event handlers
+  window.__t = t;
+  window.__load = load;
+  window.__smailUser = user;
 
   // Update hardcoded UI text for current language
   function localizeUI(){
