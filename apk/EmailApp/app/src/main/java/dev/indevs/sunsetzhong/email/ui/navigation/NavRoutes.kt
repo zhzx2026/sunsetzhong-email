@@ -9,6 +9,7 @@ object NavRoutes {
     const val SENT = "sent"
     const val CONTACTS = "contacts"
     const val SETTINGS = "settings"
+    const val DINGTALK = "dingtalk"
     const val DETAIL = "detail/{emailId}"
     const val COMPOSE = "compose?replyTo={replyToId}&to={recipient}"
 

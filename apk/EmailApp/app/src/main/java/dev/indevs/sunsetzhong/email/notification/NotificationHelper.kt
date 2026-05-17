@@ -3,6 +3,7 @@ package dev.indevs.sunsetzhong.email.notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -13,12 +14,19 @@ import dev.indevs.sunsetzhong.email.R
 object NotificationHelper {
 
     fun showNewMailNotification(context: Context, count: Int, titles: List<String>) {
+        showNewMailNotification(context, count, titles, null)
+    }
+
+    fun showNewMailNotification(context: Context, count: Int, titles: List<String>, emailId: String?) {
         val title = if (count == 1) "新邮件" else "$count 封新邮件"
         val body = if (count == 1) titles.firstOrNull() ?: "您有新邮件"
             else titles.take(3).joinToString("、") + if (count > 3) "等" else ""
 
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            if (emailId != null) {
+                data = Uri.parse("smail://mail/$emailId")
+            }
         }
         val pi = PendingIntent.getActivity(
             context, 0, intent,
@@ -26,7 +34,7 @@ object NotificationHelper {
         )
 
         val notif = NotificationCompat.Builder(context, SdMailApp.CHANNEL_NEW_MAIL)
-            .setSmallIcon(android.R.drawable.ic_dialog_email)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(body)
             .setContentIntent(pi)

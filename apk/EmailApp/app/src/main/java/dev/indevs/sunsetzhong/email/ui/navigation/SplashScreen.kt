@@ -18,8 +18,10 @@ import kotlinx.coroutines.flow.firstOrNull
 
 @Composable
 fun SplashScreen(
+    deepLink: String? = null,
     onLoggedIn: () -> Unit,
     onNotLoggedIn: () -> Unit,
+    onDeepLink: (emailId: String) -> Unit = {},
 ) {
     Box(
         modifier = Modifier
@@ -53,6 +55,11 @@ fun SplashScreen(
     }
 
     LaunchedEffect(Unit) {
+        // Extract email ID from deep link if present
+        val deepLinkEmailId = deepLink?.let { link ->
+            val prefix = "smail://mail/"
+            if (link.startsWith(prefix)) link.removePrefix(prefix) else null
+        }
         val prefs = try {
             SdMailApp.instance.container.prefs
         } catch (e: Exception) {
@@ -65,6 +72,10 @@ fun SplashScreen(
             onNotLoggedIn()
         } else {
             onLoggedIn()
+            // Navigate to email detail if deep link was present
+            if (deepLinkEmailId != null) {
+                onDeepLink(deepLinkEmailId)
+            }
         }
     }
 }

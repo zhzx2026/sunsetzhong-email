@@ -1,8 +1,17 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
+}
+
+// Load keystore config from local.properties
+val keystoreProperties = Properties()
+val keystoreFile = rootProject.file("../local.properties")
+if (keystoreFile.exists()) {
+    keystoreFile.inputStream().use { keystoreProperties.load(it) }
 }
 
 android {
@@ -15,14 +24,17 @@ android {
         targetSdk = 35
         versionCode = 224
         versionName = "2.24"
+
+        // Make BASE_URL configurable via build config
+        buildConfigField("String", "BASE_URL", "\"https://sunsetzhong.indevs.in/\"")
     }
 
     signingConfigs {
         create("release") {
-            storeFile = file("android.keystore")
-            storePassword = "android"
-            keyAlias = "smail"
-            keyPassword = "android"
+            storeFile = file(keystoreProperties.getProperty("KEYSTORE_PATH", "android.keystore"))
+            storePassword = keystoreProperties.getProperty("KEYSTORE_PASSWORD", "android")
+            keyAlias = keystoreProperties.getProperty("KEY_ALIAS", "smail")
+            keyPassword = keystoreProperties.getProperty("KEY_PASSWORD", "android")
         }
     }
 
@@ -44,11 +56,12 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     lint {
-        abortOnError = false
-        checkReleaseBuilds = false
+        abortOnError = true
+        checkReleaseBuilds = true
     }
 }
 

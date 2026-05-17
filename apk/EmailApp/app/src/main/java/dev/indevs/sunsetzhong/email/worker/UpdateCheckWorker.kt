@@ -11,12 +11,15 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.FileProvider
 import androidx.work.*
+import dev.indevs.sunsetzhong.email.BuildConfig
 import dev.indevs.sunsetzhong.email.MainActivity
 import dev.indevs.sunsetzhong.email.SdMailApp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.io.File
 import java.io.FileOutputStream
-import java.net.HttpURLConnection
-import java.net.URL
 import java.util.concurrent.TimeUnit
 
 class UpdateCheckWorker(
@@ -24,36 +27,54 @@ class UpdateCheckWorker(
     params: WorkerParameters,
 ) : CoroutineWorker(context, params) {
 
-    override suspend fun doWork(): Result {
-        return try {
-            val versionResp = URL("https://sunsetzhong.indevs.in/api/version")
-                .openConnection().apply {
-                    connectTimeout = 10000; readTimeout = 10000
-                } as HttpURLConnection
+    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        try {
+            val client = OkHttpClient.Builder()
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(10, TimeUnit.SECONDS)
+                .build()
 
-            val body = versionResp.inputStream.bufferedReader().readText()
-            versionResp.disconnect()
+            // Fetch version info
+            val versionRequest = Request.Builder()
+                .url("${BuildConfig.BASE_URL}api/version")
+                .build()
+            val versionBody = client.newCall(versionRequest).execute().use { response ->
+                if (!response.isSuccessful) return@withContext Result.success()
+                response.body?.string() ?: return@withContext Result.success()
+            }
 
-            val remoteVer = Regex("\"version\"\\s*:\\s*\"([^\"]+)\"").find(body)?.groupValues?.get(1) ?: ""
-            if (remoteVer.isEmpty()) return Result.success()
+            val remoteVer = Regex("\"version\"\\s*:\\s*\"([^\"]+)\"")
+                .find(versionBody)?.groupValues?.get(1) ?: ""
+            if (remoteVer.isEmpty()) return@withContext Result.success()
 
             val localVer = try {
-                applicationContext.packageManager.getPackageInfo(applicationContext.packageName, 0).versionName
+                applicationContext.packageManager
+                    .getPackageInfo(applicationContext.packageName, 0).versionName
             } catch (_: PackageManager.NameNotFoundException) { "" }
 
-            if (remoteVer == localVer) return Result.success()
+            if (remoteVer == localVer) return@withContext Result.success()
+
+            // Use apk_url from API response if present, otherwise fall back to default
+            val apkUrl = Regex("\"apk_url\"\\s*:\\s*\"([^\"]+)\"")
+                .find(versionBody)?.groupValues?.get(1)
+                ?: "${BuildConfig.BASE_URL}app.apk"
 
             // Download APK
-            val file = File(applicationContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "update.apk")
-            val dl = URL("https://sunsetzhong.indevs.in/app.apk").openConnection().apply {
-                connectTimeout = 30000; readTimeout = 120000
-            } as HttpURLConnection
-            if (dl.responseCode != 200) return Result.success()
-
-            dl.inputStream.use { input ->
-                FileOutputStream(file).use { output -> input.copyTo(output) }
+            val file = File(
+                applicationContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
+                "update.apk"
+            )
+            val downloadClient = OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(120, TimeUnit.SECONDS)
+                .build()
+            val dlRequest = Request.Builder().url(apkUrl).build()
+            downloadClient.newCall(dlRequest).execute().use { response ->
+                if (!response.isSuccessful) return@withContext Result.success()
+                response.body?.byteStream()?.use { input ->
+                    FileOutputStream(file).use { output -> input.copyTo(output) }
+                }
             }
-            dl.disconnect()
 
             // Show install notification
             val uri = FileProvider.getUriForFile(
@@ -67,11 +88,12 @@ class UpdateCheckWorker(
             }
             val pi = PendingIntent.getActivity(
                 applicationContext, 0, installIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= 23) PendingIntent.FLAG_IMMUTABLE else 0)
+                PendingIntent.FLAG_UPDATE_CURRENT or
+                    (if (Build.VERSION.SDK_INT >= 23) PendingIntent.FLAG_IMMUTABLE else 0)
             )
 
             val notif = NotificationCompat.Builder(applicationContext, SdMailApp.CHANNEL_UPDATE)
-                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle("新版本 $remoteVer 已下载")
                 .setContentText("点击安装更新")
                 .setAutoCancel(true)
@@ -82,7 +104,7 @@ class UpdateCheckWorker(
             Result.success()
         } catch (e: Exception) {
             Log.e("UpdateCheckWorker", "Update check failed", e)
-            Result.success() // Don't retry — try again next time
+            Result.success()
         }
     }
 }

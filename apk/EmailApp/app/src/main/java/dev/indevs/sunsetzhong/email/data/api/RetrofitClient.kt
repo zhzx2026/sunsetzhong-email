@@ -10,7 +10,7 @@ import java.net.CookiePolicy
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
-    private const val BASE_URL = "https://sunsetzhong.indevs.in/"
+    private val BASE_URL: String get() = dev.indevs.sunsetzhong.email.BuildConfig.BASE_URL
 
     fun create(prefs: PreferencesManager): ApiService {
         val cookieManager = CookieManager()

@@ -60,5 +60,6 @@ val bottomNavItems = listOf(
     BottomNavItem("收件箱", NavRoutes.INBOX, Icons.Filled.Inbox, Icons.Outlined.Inbox),
     BottomNavItem("已发送", NavRoutes.SENT, Icons.AutoMirrored.Filled.Send, Icons.AutoMirrored.Outlined.Send),
     BottomNavItem("联系人", NavRoutes.CONTACTS, Icons.Filled.Contacts, Icons.Outlined.Contacts),
+    BottomNavItem("视频", NavRoutes.DINGTALK, Icons.Filled.Videocam, Icons.Outlined.Videocam),
     BottomNavItem("设置", NavRoutes.SETTINGS, Icons.Filled.Settings, Icons.Outlined.Settings),
 )

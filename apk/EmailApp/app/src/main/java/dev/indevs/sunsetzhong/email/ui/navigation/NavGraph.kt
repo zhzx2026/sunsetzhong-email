@@ -12,13 +12,18 @@ import dev.indevs.sunsetzhong.email.ui.detail.EmailDetailScreen
 import dev.indevs.sunsetzhong.email.ui.compose.ComposeScreen
 
 @Composable
-fun NavGraph(navController: NavHostController) {
+fun NavGraph(
+    navController: NavHostController,
+    startDestination: String = NavRoutes.SPLASH,
+    deepLink: String? = null,
+) {
     NavHost(
         navController = navController,
-        startDestination = NavRoutes.SPLASH
+        startDestination = startDestination
     ) {
         composable(NavRoutes.SPLASH) {
             SplashScreen(
+                deepLink = deepLink,
                 onLoggedIn = {
                     navController.navigate(NavRoutes.MAIN) {
                         popUpTo(NavRoutes.SPLASH) { inclusive = true }
@@ -28,7 +33,13 @@ fun NavGraph(navController: NavHostController) {
                     navController.navigate(NavRoutes.LOGIN) {
                         popUpTo(NavRoutes.SPLASH) { inclusive = true }
                     }
-                }
+                },
+                onDeepLink = { emailId ->
+                    navController.navigate(NavRoutes.MAIN) {
+                        popUpTo(NavRoutes.SPLASH) { inclusive = true }
+                    }
+                    navController.navigate(NavRoutes.detail(emailId))
+                },
             )
         }
 

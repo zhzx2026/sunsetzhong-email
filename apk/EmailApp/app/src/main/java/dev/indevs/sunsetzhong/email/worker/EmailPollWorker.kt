@@ -34,10 +34,12 @@ class EmailPollWorker(
                                 applicationContext,
                                 newEmails.size,
                                 newEmails.map { it.subject ?: "无主题" },
+                                newEmails.first().id,
                             )
                         }
                     }
-                    prefs.setKnownIds(currentIds)
+                    // Keep only most recent 200 IDs to prevent unbounded growth
+                    prefs.setKnownIds(currentIds.take(200).toSet())
                     Result.success()
                 },
                 onFailure = {

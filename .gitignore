@@ -8,6 +8,9 @@ dist/
 **/build/
 *.keystore
 *.apk
+apk/android.keystore
+public/app.apk
+apk/local.properties
 
 # DingTalkGoGoGo
 DingTalkGoGoGo/GoDingtalk*
