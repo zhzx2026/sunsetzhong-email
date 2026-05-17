@@ -322,7 +322,11 @@ async function api(path, opts) {
 
 async function checkAuth() {
   const d = await api('/auth/me');
-  if (!d || !d.ok || !d.user) { location.href = '/login'; return; }
+  if (!d || !d.ok || !d.user) {
+    if (navigator.onLine) { location.href = '/login'; return; }
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:var(--font);text-align:center"><div><div style="font-size:48px;margin-bottom:16px">📡</div><p style="font-size:16px;color:var(--text,#0f172a);margin-bottom:8px">无网络连接</p><p style="font-size:13px;color:var(--muted,#64748b);margin-bottom:24px">检查网络连接后重试</p><button onclick="location.reload()" style="padding:10px 24px;background:var(--blue,#2563eb);color:#fff;border:none;border-radius:10px;font-size:14px;cursor:pointer">刷新</button></div></div>';
+    return;
+  }
   state.user = d.user;
   document.body.style.display = 'flex';
   init();
@@ -977,6 +981,9 @@ window.addEventListener('popstate', function() {
 });
 
 checkAuth();
+
+// Auto-recovery on network restore
+window.addEventListener('online', function() { location.reload(); });
 
 // Service Worker update detection
 if ('serviceWorker' in navigator) {
