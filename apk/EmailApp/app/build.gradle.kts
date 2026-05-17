@@ -13,8 +13,8 @@ android {
         applicationId = "in.indevs.sunsetzhong.email"
         minSdk = 26
         targetSdk = 35
-        versionCode = 222
-        versionName = "2.22"
+        versionCode = 223
+        versionName = "2.23"
     }
 
     signingConfigs {
