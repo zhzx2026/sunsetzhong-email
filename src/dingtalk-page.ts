@@ -173,9 +173,59 @@ button:disabled{background:#94a3b8;cursor:not-allowed;transform:none;box-shadow:
 .empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
 .empty-state .empty-icon{font-size:40px;margin-bottom:12px}
 .empty-state .empty-text{font-size:14px}
+
+/* mobile bar - hidden on desktop */
+#mobile-bar{display:none}
+#sidebar-backdrop{display:none}
+
+/* mobile responsive */
+@media (max-width:768px){
+  body{flex-direction:column}
+  #mobile-bar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:100}
+  .hamburger{width:24px;height:18px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;background:none;border:none;padding:0}
+  .hamburger span{display:block;width:100%;height:2px;background:var(--text);border-radius:1px}
+  #sidebar{position:fixed;left:0;top:0;width:280px;height:100vh;z-index:500;transform:translateX(-100%);transition:transform .25s ease;box-shadow:2px 0 16px rgba(0,0,0,.15)}
+  #sidebar.open{transform:translateX(0)}
+  #sidebar-backdrop.show{display:block;position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:499}
+  #main{padding:16px;max-height:none}
+  .metrics{grid-template-columns:repeat(2,1fr);gap:8px}
+  .metric{padding:14px 16px}
+  .metric .value{font-size:24px}
+  .url-form{flex-direction:column}
+  .url-form input{min-width:auto}
+  .url-form input[type="number"]{width:100%}
+  .gate-card{padding:20px;max-width:95vw;max-height:90vh}
+  h1{font-size:18px;margin-bottom:16px}
+  .card{padding:16px;margin-bottom:16px}
+  .job-meta{flex-wrap:wrap;gap:8px;font-size:11px}
+  .pw-form{flex-direction:column}
+  .pw-form input{max-width:none}
+  .pw-strength{max-width:none}
+  .status-row{flex-wrap:wrap;gap:4px}
+  .status-label{width:auto}
+  #toast-container{top:8px;right:8px;left:8px}
+  .toast{max-width:none;font-size:12px}
+  .admin-table{font-size:10px}
+  .admin-table th,.admin-table td{padding:4px 6px}
+  .pagination{gap:4px}
+}
+@media (max-width:480px){
+  .metrics{grid-template-columns:1fr}
+  .gate-card{padding:16px;max-width:100vw;border-radius:12px}
+  #main{padding:12px}
+}
 </style>
 </head>
 <body>
+
+<!-- mobile top bar -->
+<div id="mobile-bar">
+  <button class="hamburger" onclick="toggleSidebar()" aria-label="菜单">
+    <span></span><span></span><span></span>
+  </button>
+  <span style="font-weight:600;font-size:14px">钉钉视频下载</span>
+</div>
+<div id="sidebar-backdrop" onclick="closeSidebar()"></div>
 
 <!-- sidebar -->
 <div id="sidebar">
@@ -432,7 +482,20 @@ async function acceptLegal() {
 function closeGate() { document.getElementById('gate').classList.remove('show'); }
 function gateAction() {}
 
+function toggleSidebar() {
+  var sidebar = document.getElementById('sidebar');
+  var backdrop = document.getElementById('sidebar-backdrop');
+  var open = sidebar.classList.contains('open');
+  if (open) { sidebar.classList.remove('open'); backdrop.classList.remove('show'); }
+  else { sidebar.classList.add('open'); backdrop.classList.add('show'); }
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-backdrop').classList.remove('show');
+}
+
 function navigate(page) {
+  closeSidebar();
   if (location.hash !== '#' + page) {
     history.pushState(null, '', '#' + page);
   }

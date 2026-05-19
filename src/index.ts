@@ -374,7 +374,7 @@ app.get("/dingtalk", async (c) => {
 });
 
 // ── Version ──
-app.get("/api/version", c => c.json({ ok: true, version: "2.27", apk_url: "/app.apk" }));
+app.get("/api/version", c => c.json({ ok: true, version: "2.28", apk_url: "/app.apk" }));
 
 // Helper: determine if connection is secure, even behind Cloudflare proxy
 function isSecure(c: any) {
