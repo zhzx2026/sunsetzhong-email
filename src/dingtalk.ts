@@ -559,6 +559,25 @@ async function requireDingtalkEnabled(env: Env): Promise<Response | null> {
   return null;
 }
 
+async function getGuestToken(env: Env): Promise<string> {
+  const row = await env.DB.prepare("SELECT value FROM dt_settings WHERE key='guest_token'").first<{value:string}>();
+  return row?.value || '';
+}
+
+async function validateGuestToken(env: Env, token: string): Promise<boolean> {
+  const valid = await getGuestToken(env);
+  return valid !== '' && token === valid;
+}
+
+async function ensureGuestToken(env: Env): Promise<string> {
+  let token = await getGuestToken(env);
+  if (!token) {
+    token = crypto.randomUUID();
+    await env.DB.prepare("INSERT INTO dt_settings(key,value,updated_at) VALUES('guest_token',?1,?2) ON CONFLICT(key) DO UPDATE SET value=?1,updated_at=?2").bind(token, new Date().toISOString()).run();
+  }
+  return token;
+}
+
 // ── Hono sub-app ──
 
 const dt = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
@@ -770,6 +789,16 @@ dt.get("/files", async (c) => {
   return new Response(ghResponse.body, { headers });
 });
 
+// ── Admin: regenerate guest token ──
+dt.post("/admin/regenerate-token", async (c) => {
+  const u = getUser(c);
+  const err = requireSudo(u);
+  if (err) return err;
+  const token = crypto.randomUUID();
+  await setDtSetting(c.env as Env, "guest_token", token);
+  return c.json({ ok: true, token });
+});
+
 // ── Admin: users ──
 dt.get("/admin/users", async (c) => {
   const u = getUser(c);
@@ -879,5 +908,5 @@ dt.post("/internal/login-sessions/:id/complete", async (c) => {
 
 // ── Export sub-app ──
 
-export { dt, dingtalkEnabled, requireDingtalkEnabled };
+export { dt, dingtalkEnabled, requireDingtalkEnabled, getGuestToken, validateGuestToken, ensureGuestToken };
 export type { Env as DtEnv, AuthUser as DtAuthUser };

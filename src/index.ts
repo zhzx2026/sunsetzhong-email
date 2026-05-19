@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { HTTPException } from "hono/http-exception";
-import { dt, dingtalkEnabled, requireDingtalkEnabled } from "./dingtalk";
+import { dt, dingtalkEnabled, requireDingtalkEnabled, getGuestToken, validateGuestToken, ensureGuestToken } from "./dingtalk";
 import { DINGTALK_PAGE } from "./dingtalk-page";
 
 interface Env {
@@ -160,6 +160,7 @@ app.get("/api/admin/settings", async(c)=>{
 
 app.get("/api/dingtalk/admin/settings", async(c)=>{
   const u=await auth(c); if(!u.isSudo) return c.json({ok:false,error:"需要管理员权限"},403);
+  await ensureGuestToken(c.env);
   const rows=await c.env.DB.prepare("SELECT key,value FROM dt_settings").all();
   const settings:any={}; for(const r of (rows.results||[])) settings[r.key]=r.value;
   return c.json({ok:true,settings});
@@ -358,6 +359,18 @@ async function notifyUser(env: Env, userId: string, title: string, body: string)
 app.use("/api/dingtalk/*", async (c, next) => {
   const err = await requireDingtalkEnabled(c.env);
   if (err) return err;
+
+  // Guest token auth: accept ?dt_token= or x-dt-token header as alternative to session
+  const u = c.get("user");
+  if (!u) {
+    const dtToken = c.req.query("dt_token") || c.req.header("x-dt-token") || "";
+    if (dtToken && await validateGuestToken(c.env, dtToken)) {
+      const admin = await c.env.DB.prepare("SELECT id, username, role, is_sudo FROM users WHERE role='admin' ORDER BY created_at LIMIT 1").first<AuthUser & {is_sudo: number}>();
+      if (admin) {
+        c.set("user", {id: admin.id, username: admin.username, role: admin.role, isSudo: admin.is_sudo === 1 || admin.role === "admin"});
+      }
+    }
+  }
   await next();
 });
 app.use("/internal/dingtalk/*", async (c, next) => { await next(); }); // internal routes self-auth via token
@@ -367,14 +380,26 @@ app.route("/internal/dingtalk", dt);
 // ── DingTalk page ──
 app.get("/dingtalk", async (c) => {
   const u = c.get("user");
-  if (!u) return c.redirect("/login");
   const enabled = await dingtalkEnabled(c.env);
   if (enabled === "off") return c.notFound();
-  return c.html(DINGTALK_PAGE);
+
+  // Guest token bypass: ?token=<guest_token> allows login-free access
+  const token = c.req.query("token") || "";
+  const validToken = await getGuestToken(c.env);
+  const isGuest = validToken && token === validToken;
+
+  if (!u && !isGuest) return c.redirect("/login");
+
+  // Embed token in page for guest access
+  let page = DINGTALK_PAGE;
+  if (isGuest && !u) {
+    page = page.replace("let state =", "window.__DT_TOKEN='" + token + "';let state =");
+  }
+  return c.html(page);
 });
 
 // ── Version ──
-app.get("/api/version", c => c.json({ ok: true, version: "2.28", apk_url: "/app.apk" }));
+app.get("/api/version", c => c.json({ ok: true, version: "2.29", apk_url: "/app.apk" }));
 
 // Helper: determine if connection is secure, even behind Cloudflare proxy
 function isSecure(c: any) {

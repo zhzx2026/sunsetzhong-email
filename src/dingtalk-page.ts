@@ -362,15 +362,24 @@ button:disabled{background:#94a3b8;cursor:not-allowed;transform:none;box-shadow:
 <script>
 let state = { user: null, status: null, legalState: null, legalText: '', currentPage: 1, totalPages: 1, jobs: [], loginSession: null, adminTab: 'users' };
 let pollTimer = null;
+const DT_TOKEN = window.__DT_TOKEN || '';
+const isGuest = !!DT_TOKEN;
 
 async function api(path, opts) {
+  opts = opts || {};
+  if (DT_TOKEN) {
+    var h = opts.headers || {};
+    h['x-dt-token'] = DT_TOKEN;
+    opts.headers = h;
+  }
   const r = await fetch('/api' + path, { credentials: 'include', ...opts });
   const d = await r.json();
-  if (!r.ok && r.status === 401) { location.href = '/login'; return null; }
+  if (!r.ok && r.status === 401) { if (!DT_TOKEN) location.href = '/login'; return null; }
   return d;
 }
 
 async function checkAuth() {
+  if (isGuest) { document.body.style.display = 'flex'; init(); return; }
   const d = await api('/auth/me');
   if (!d || !d.ok || !d.user) {
     if (navigator.onLine) { location.href = '/login'; return; }
@@ -855,6 +864,10 @@ async function loadAdmin() {
   if (!state.user || !state.user.isSudo) return;
   const html =
     '<div class="admin-section">' +
+      '<h2>免登录链接</h2>' +
+      '<div id="admin-guest-url"></div>' +
+    '</div>' +
+    '<div class="admin-section">' +
       '<h2>用户管理</h2>' +
       '<div id="admin-users"></div>' +
     '</div>' +
@@ -863,8 +876,47 @@ async function loadAdmin() {
       '<div id="admin-legal"></div>' +
     '</div>';
   document.getElementById('admin-content').innerHTML = html;
+  loadAdminGuestURL();
   loadAdminUsers();
   loadAdminLegal();
+}
+
+async function loadAdminGuestURL() {
+  const d = await api('/dingtalk/admin/settings');
+  if (!d || !d.settings) return;
+  const token = d.settings.guest_token || '';
+  if (!token) {
+    document.getElementById('admin-guest-url').innerHTML = '<div style="color:var(--red);font-size:13px">无法加载，请刷新重试</div>';
+    return;
+  }
+  const url = location.origin + '/dingtalk?token=' + token;
+  document.getElementById('admin-guest-url').innerHTML =
+    '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">持有此链接的人可免登录使用钉钉下载。请勿公开分享。</div>' +
+    '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
+      '<input type="text" value="' + escHtml(url) + '" readonly style="flex:1;min-width:280px;font-size:12px;font-family:monospace" id="guest-url-input" />' +
+      '<button onclick="copyGuestURL()">复制链接</button>' +
+      '<button class="btn-ghost btn-sm" onclick="regenerateToken()" style="white-space:nowrap">重新生成</button>' +
+    '</div>' +
+    '<div id="guest-url-msg" style="margin-top:8px;font-size:12px"></div>';
+}
+
+function copyGuestURL() {
+  const input = document.getElementById('guest-url-input');
+  if (!input) return;
+  input.select();
+  document.execCommand('copy');
+  document.getElementById('guest-url-msg').innerHTML = '<span style="color:#166534">已复制</span>';
+}
+
+async function regenerateToken() {
+  if (!confirm('确定要重新生成免登录链接吗？旧链接将立即失效。')) return;
+  const d = await api('/dingtalk/admin/regenerate-token', { method: 'POST' });
+  if (d && d.ok && d.token) {
+    loadAdminGuestURL();
+    document.getElementById('guest-url-msg').innerHTML = '<span style="color:#166534">已生成新链接</span>';
+  } else {
+    alert(d?.error || '操作失败');
+  }
 }
 
 async function loadAdminUsers() {
