@@ -1,8 +1,0 @@
-# Copy this file to local.properties and fill in your actual values
-# local.properties is gitignored — do NOT commit real credentials
-
-# Keystore configuration
-KEYSTORE_PATH=android.keystore
-KEYSTORE_PASSWORD=android
-KEY_ALIAS=smail
-KEY_PASSWORD=android

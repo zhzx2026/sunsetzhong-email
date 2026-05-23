@@ -297,8 +297,20 @@ async function getDtLegalConfig(env: Env): Promise<{ version: string; text: stri
   return { version: version || DEFAULT_LEGAL_VERSION, text: text || DEFAULT_LEGAL_TEXT };
 }
 
+async function getGuestSetting(env: Env, guestId: string, key: string): Promise<string | null> {
+  return getDtSetting(env, `guest:${guestId}:${key}`);
+}
+
+async function setGuestSetting(env: Env, guestId: string, key: string, value: string): Promise<void> {
+  await setDtSetting(env, `guest:${guestId}:${key}`, value);
+}
+
 async function getUserLegalState(env: Env, userID: string): Promise<{ accepted: boolean; acceptedAt: string | null; version: string }> {
   const legalConfig = await getDtLegalConfig(env);
+  if (isGuestUser(userID)) {
+    const acceptedAt = await getGuestSetting(env, userID, "legal_accepted");
+    return { accepted: acceptedAt === legalConfig.version, acceptedAt, version: legalConfig.version };
+  }
   const row = await env.DB.prepare("SELECT legal_version, legal_accepted_at FROM users WHERE id = ?1").bind(userID).first<{ legal_version: string | null; legal_accepted_at: string | null }>();
   const version = row?.legal_version || "";
   const acceptedAt = row?.legal_accepted_at || null;
@@ -308,7 +320,11 @@ async function getUserLegalState(env: Env, userID: string): Promise<{ accepted: 
 async function acceptLegalTerms(env: Env, userID: string): Promise<{ accepted: boolean; acceptedAt: string; version: string }> {
   const legalConfig = await getDtLegalConfig(env);
   const acceptedAt = nowISO();
-  await env.DB.prepare("UPDATE users SET legal_version = ?2, legal_accepted_at = ?3 WHERE id = ?1").bind(userID, legalConfig.version, acceptedAt).run();
+  if (isGuestUser(userID)) {
+    await setGuestSetting(env, userID, "legal_accepted", legalConfig.version);
+  } else {
+    await env.DB.prepare("UPDATE users SET legal_version = ?2, legal_accepted_at = ?3 WHERE id = ?1").bind(userID, legalConfig.version, acceptedAt).run();
+  }
   return { accepted: true, acceptedAt, version: legalConfig.version };
 }
 
@@ -504,13 +520,16 @@ async function resolveArtifactDownloadURL(env: Env, artifactName: string): Promi
 async function createJob(env: Env, ownerUserID: string, payload: CreateJobPayload): Promise<JobRecord> {
   const urls = normalizeURLs(payload.url, payload.urls);
   if (urls.length === 0) throw new Error("at least one url is required");
-  const legalState = await getUserLegalState(env, ownerUserID);
-  if (!legalState.accepted) throw new Error("legal disclaimer must be accepted before creating jobs");
-  const cookieState = await getUserCookieState(env, ownerUserID);
-  if (!cookieState.cookiesReady) throw new Error("cookies are missing or invalid");
-  const userRow = await env.DB.prepare("SELECT dt_zip_password FROM users WHERE id = ?1").bind(ownerUserID).first<{ dt_zip_password: string | null }>();
-  const zipPassword = (userRow?.dt_zip_password || "").trim();
-  if (!zipPassword) throw new Error("zip password must be set before creating jobs");
+  const guest = isGuestUser(ownerUserID);
+  if (!guest) {
+    const legalState = await getUserLegalState(env, ownerUserID);
+    if (!legalState.accepted) throw new Error("legal disclaimer must be accepted before creating jobs");
+    const cookieState = await getUserCookieState(env, ownerUserID);
+    if (!cookieState.cookiesReady) throw new Error("cookies are missing or invalid");
+    const userRow = await env.DB.prepare("SELECT dt_zip_password FROM users WHERE id = ?1").bind(ownerUserID).first<{ dt_zip_password: string | null }>();
+    const zipPassword = (userRow?.dt_zip_password || "").trim();
+    if (!zipPassword) throw new Error("zip password must be set before creating jobs");
+  }
   const threadInput = toNumber(payload.thread) || DEFAULT_THREAD;
   const thread = clampThread(threadInput);
   const createVideoList = payload.create_video_list !== false;
@@ -578,6 +597,14 @@ async function ensureGuestToken(env: Env): Promise<string> {
   return token;
 }
 
+function guestOwnerId(token: string): string {
+  return "guest:" + token.slice(0, 16);
+}
+
+function isGuestUser(userID: string): boolean {
+  return userID.startsWith("guest:");
+}
+
 // ── Hono sub-app ──
 
 const dt = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
@@ -593,15 +620,17 @@ function getUser(c: any): AuthUser {
 dt.get("/status", async (c) => {
   const u = getUser(c);
   const env = c.env as Env;
-  const [countsRow, cookieState, legalState, zipRow] = await Promise.all([
+  const guest = isGuestUser(u.id);
+  const [countsRow, cookieState, legalState] = await Promise.all([
     env.DB.prepare(
       `SELECT COUNT(*) AS total_jobs, SUM(CASE WHEN status = 'queued' THEN 1 ELSE 0 END) AS queued_jobs, SUM(CASE WHEN status = 'running' THEN 1 ELSE 0 END) AS running_jobs, SUM(CASE WHEN status = 'succeeded' THEN 1 ELSE 0 END) AS succeeded_jobs, SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failed_jobs FROM dt_jobs WHERE owner_user_id = ?1`
     ).bind(u.id).first<Record<string, number | string | null>>(),
     getUserCookieState(env, u.id),
     getUserLegalState(env, u.id),
-    env.DB.prepare("SELECT dt_zip_password FROM users WHERE id = ?1").bind(u.id).first<{ dt_zip_password: string | null }>(),
   ]);
-  const hasZipPassword = Boolean((zipRow?.dt_zip_password || "").trim());
+  const hasZipPassword = guest
+    ? Boolean(await getGuestSetting(env, u.id, "zip_password"))
+    : Boolean(((await env.DB.prepare("SELECT dt_zip_password FROM users WHERE id = ?1").bind(u.id).first<{ dt_zip_password: string | null }>())?.dt_zip_password || "").trim());
   const workflowRepository = env.GITHUB_REPOSITORY || "";
   const workflowFile = env.GITHUB_WORKFLOW_FILE || DEFAULT_WORKFLOW_FILE;
   const loginWorkflowFile = env.GITHUB_LOGIN_WORKFLOW_FILE || DEFAULT_LOGIN_WORKFLOW_FILE;
@@ -680,6 +709,10 @@ dt.post("/cookies", async (c) => c.json({ error: "manual cookie upload disabled;
 dt.get("/zip-password", async (c) => {
   const u = getUser(c);
   const env = c.env as Env;
+  if (isGuestUser(u.id)) {
+    const pw = await getGuestSetting(env, u.id, "zip_password");
+    return c.json({ has_password: Boolean(pw) });
+  }
   const row = await env.DB.prepare("SELECT dt_zip_password FROM users WHERE id = ?1").bind(u.id).first<{ dt_zip_password: string | null }>();
   return c.json({ has_password: Boolean((row?.dt_zip_password || "").trim()) });
 });
@@ -691,7 +724,11 @@ dt.post("/zip-password", async (c) => {
   const password = (body.password || "").trim();
   if (!password) return c.json({ error: "password cannot be empty" }, 400);
   if (password.length < 4) return c.json({ error: "password must be at least 4 characters" }, 400);
-  await env.DB.prepare("UPDATE users SET dt_zip_password = ?2 WHERE id = ?1").bind(u.id, password).run();
+  if (isGuestUser(u.id)) {
+    await setGuestSetting(env, u.id, "zip_password", password);
+  } else {
+    await env.DB.prepare("UPDATE users SET dt_zip_password = ?2 WHERE id = ?1").bind(u.id, password).run();
+  }
   return c.json({ ok: true });
 });
 
@@ -845,10 +882,17 @@ dt.get("/internal/jobs/:id/claim", async (c) => {
   if (row.status === "running") return c.json({ error: "job is already running" }, 409);
   if (row.status === "succeeded" || row.status === "failed") return c.json({ error: "job already finished" }, 409);
   if (!row.owner_user_id) return c.json({ error: "job owner is missing" }, 409);
+  const guestOwner = isGuestUser(row.owner_user_id);
   const cookieState = await getUserCookieState(env, row.owner_user_id);
   if (!cookieState.cookiesReady) return c.json({ error: "cookies are missing or invalid" }, 409);
-  const zipRow = await env.DB.prepare("SELECT dt_zip_password FROM users WHERE id = ?1").bind(row.owner_user_id).first<{ dt_zip_password: string | null }>();
-  const zipPassword = (zipRow?.dt_zip_password || "").trim();
+  let zipPassword: string;
+  if (guestOwner) {
+    zipPassword = (await getGuestSetting(env, row.owner_user_id, "zip_password")) || "";
+    if (!zipPassword) return c.json({ error: "zip password not set" }, 409);
+  } else {
+    const zipRow = await env.DB.prepare("SELECT dt_zip_password FROM users WHERE id = ?1").bind(row.owner_user_id).first<{ dt_zip_password: string | null }>();
+    zipPassword = (zipRow?.dt_zip_password || "").trim();
+  }
   const job = await getJob(env, jobID);
   if (!job) return c.json({ error: "job not found" }, 404);
   await env.DB.prepare("UPDATE dt_jobs SET status = 'running', stage = 'preparing', runner_run_id = ?2, started_at = COALESCE(started_at, ?3), updated_at = ?3 WHERE id = ?1").bind(jobID, c.req.header("X-GitHub-Run-ID") || "", nowISO()).run();
@@ -908,5 +952,5 @@ dt.post("/internal/login-sessions/:id/complete", async (c) => {
 
 // ── Export sub-app ──
 
-export { dt, dingtalkEnabled, requireDingtalkEnabled, getGuestToken, validateGuestToken, ensureGuestToken };
+export { dt, dingtalkEnabled, requireDingtalkEnabled, getGuestToken, validateGuestToken, ensureGuestToken, guestOwnerId };
 export type { Env as DtEnv, AuthUser as DtAuthUser };

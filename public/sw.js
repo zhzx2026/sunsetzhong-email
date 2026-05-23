@@ -1,5 +1,5 @@
 const CACHE = "smail-v6";
-const VERSION = "2.29";
+const VERSION = "2.36";
 
 const PRE_CACHE = ["/", "/login", "/register", "/manifest.json", "/offline.html"];
 
@@ -38,13 +38,13 @@ self.addEventListener("fetch", e => {
   if (url.pathname.startsWith("/api/")) return;
 
   // Cache-first for static assets
-  if (url.pathname.match(/\.(js|css|png|svg|ico|woff2?|apk|json)$/)) {
+  if (url.pathname.match(/\.(js|css|png|svg|ico|woff2?|json)$/)) {
     e.respondWith(
       caches.match(e.request).then(r => r || fetch(e.request).then(resp => {
         if (resp.ok) { const clone = resp.clone(); caches.open(CACHE).then(c => c.put(e.request, clone)); }
         return resp;
       }).catch(() => {
-        if (url.pathname.endsWith(".json") || url.pathname.endsWith(".apk")) return new Response("", {status: 503});
+        if (url.pathname.endsWith(".json")) return new Response("", {status: 503});
         return new Response("", {status: 503});
       }))
     );

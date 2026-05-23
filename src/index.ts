@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { HTTPException } from "hono/http-exception";
-import { dt, dingtalkEnabled, requireDingtalkEnabled, getGuestToken, validateGuestToken, ensureGuestToken } from "./dingtalk";
+import { dt, dingtalkEnabled, requireDingtalkEnabled, getGuestToken, validateGuestToken, ensureGuestToken, guestOwnerId } from "./dingtalk";
 import { DINGTALK_PAGE } from "./dingtalk-page";
 
 interface Env {
@@ -21,6 +21,7 @@ async function sha256Hex(i: string) { return toHex(await crypto.subtle.digest("S
 function randomToken(b=32) { const a=new Uint8Array(b); crypto.getRandomValues(a); let s=""; for(const x of a)s+=String.fromCharCode(x); return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,""); }
 function nowIso() { return new Date().toISOString(); }
 const SESSION = "em_session";
+const GUEST_COOKIE = "dt_guest";
 const USER_RE = /^[A-Za-z0-9_.-]{3,32}$/;
 const MIN_PW = 4;
 
@@ -32,7 +33,33 @@ function splitParts(raw:string,b:string):string[]{const r:string[]=[],mk=`--${b}
 // ── Hono ──
 const app = new Hono<{Bindings:Env;Variables:{user:AuthUser|null}}>();
 app.use("*", cors({origin:"*",allowMethods:["GET","POST","PUT","DELETE","OPTIONS"],allowHeaders:["Content-Type"],credentials:true}));
-app.use("*", async(c,next)=>{ const t=getCookie(c,SESSION)||""; if(t){const h=await sha256Hex((c.env.AUTH_SALT||"em-salt")+":session:"+t);const r=await c.env.DB.prepare("SELECT u.id,u.username,u.role,u.is_sudo FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=?1 AND s.expires_at>?2 LIMIT 1").bind(h,nowIso()).first<AuthUser&{is_sudo:number}>();const au=r?{id:r.id,username:r.username,role:r.role,isSudo:r.is_sudo===1||r.role==="admin"}:null;c.set("user",au)}else{const ah=c.req.header("authorization")||"";const m=ah.match(/^Bearer\s+(.+)$/i);if(m){const h=await sha256Hex((c.env.AUTH_SALT||"em-salt")+":device:"+m[1].trim());const r=await c.env.DB.prepare("SELECT u.id,u.username,u.role,u.is_sudo FROM device_tokens d JOIN users u ON u.id=d.user_id WHERE d.token_hash=?1 LIMIT 1").bind(h).first<AuthUser&{is_sudo:number}>();c.set("user",r?{id:r.id,username:r.username,role:r.role,isSudo:r.is_sudo===1||r.role==="admin"}:null)}else c.set("user",null)} await next() });
+app.use("*", async(c,next)=>{
+  // 1. em_session cookie
+  const t = getCookie(c, SESSION) || "";
+  if (t) {
+    const h = await sha256Hex((c.env.AUTH_SALT||"em-salt") + ":session:" + t);
+    const r = await c.env.DB.prepare("SELECT u.id,u.username,u.role,u.is_sudo FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=?1 AND s.expires_at>?2 LIMIT 1").bind(h, nowIso()).first<AuthUser&{is_sudo:number}>();
+    c.set("user", r ? {id: r.id, username: r.username, role: r.role, isSudo: r.is_sudo === 1 || r.role === "admin"} : null);
+  } else {
+    // 2. Bearer device token
+    const ah = c.req.header("authorization") || "";
+    const m = ah.match(/^Bearer\s+(.+)$/i);
+    if (m) {
+      const h = await sha256Hex((c.env.AUTH_SALT||"em-salt") + ":device:" + m[1].trim());
+      const r = await c.env.DB.prepare("SELECT u.id,u.username,u.role,u.is_sudo FROM device_tokens d JOIN users u ON u.id=d.user_id WHERE d.token_hash=?1 LIMIT 1").bind(h).first<AuthUser&{is_sudo:number}>();
+      c.set("user", r ? {id: r.id, username: r.username, role: r.role, isSudo: r.is_sudo === 1 || r.role === "admin"} : null);
+    } else {
+      // 3. dt_guest cookie
+      const guestToken = getCookie(c, GUEST_COOKIE) || "";
+      if (guestToken && await validateGuestToken(c.env, guestToken)) {
+        c.set("user", {id: guestOwnerId(guestToken), username: "访客", role: "guest", isSudo: false});
+      } else {
+        c.set("user", null);
+      }
+    }
+  }
+  await next();
+});
 
 async function auth(c:any):Promise<AuthUser>{ const u=c.get("user"); if(!u) throw new HTTPException(401,{message:"unauthorized"}); return u; }
 
@@ -365,10 +392,7 @@ app.use("/api/dingtalk/*", async (c, next) => {
   if (!u) {
     const dtToken = c.req.query("dt_token") || c.req.header("x-dt-token") || "";
     if (dtToken && await validateGuestToken(c.env, dtToken)) {
-      const admin = await c.env.DB.prepare("SELECT id, username, role, is_sudo FROM users WHERE role='admin' ORDER BY created_at LIMIT 1").first<AuthUser & {is_sudo: number}>();
-      if (admin) {
-        c.set("user", {id: admin.id, username: admin.username, role: admin.role, isSudo: admin.is_sudo === 1 || admin.role === "admin"});
-      }
+      c.set("user", {id: guestOwnerId(dtToken), username: "访客", role: "guest", isSudo: false});
     }
   }
   await next();
@@ -390,16 +414,21 @@ app.get("/dingtalk", async (c) => {
 
   if (!u && !isGuest) return c.redirect("/login");
 
-  // Embed token in page for guest access
   let page = DINGTALK_PAGE;
   if (isGuest && !u) {
+    // Set cookie so subsequent API calls work without dt_token header
+    setCookie(c, GUEST_COOKIE, token, {
+      httpOnly: true, sameSite: "Lax", path: "/",
+      maxAge: 30 * 86400, secure: c.req.url.startsWith("https"),
+    });
+    // Still embed token for page's own JS use (chartbeat, SW, etc.)
     page = page.replace("let state =", "window.__DT_TOKEN='" + token + "';let state =");
   }
   return c.html(page);
 });
 
 // ── Version ──
-app.get("/api/version", c => c.json({ ok: true, version: "2.29", apk_url: "/app.apk" }));
+app.get("/api/version", c => c.json({ ok: true, version: "2.36" }));
 
 // Helper: determine if connection is secure, even behind Cloudflare proxy
 function isSecure(c: any) {
@@ -443,7 +472,7 @@ async function bootstrap(env:Env){
   console.log("bootstrap admin:",env.BOOTSTRAP_USERNAME);
 }
 
-const STATIC_FILES = new Set(["/sw.js","/manifest.json","/offline.html","/app.apk","/icon-192.png","/icon-512.png"]);
+const STATIC_FILES = new Set(["/sw.js","/manifest.json","/offline.html","/icon-192.png","/icon-512.png"]);
 
 export default {
   async fetch(r:Request,e:Env){
@@ -488,7 +517,7 @@ button:hover{background:#1d4ed8}.err{color:#dc2626;font-size:13px;margin-bottom:
 </style></head><body><div class="c">
 <h1>Sunsetzhong</h1><div class="sub">登录邮箱</div><div id="err" class="err"></div>
 <form id="f"><input name="username" placeholder="用户名" autocomplete="username" required><input name="password" type="password" placeholder="密码" autocomplete="current-password" required><button type="submit">登录</button></form>
-<div class="link">没有账号？<a href="/register">注册</a></div><div style="text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--line)"><a href="/app.apk" style="font-size:13px;color:var(--muted);text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>下载 Android App</a></div></div>
+<div class="link">没有账号？<a href="/register">注册</a></div></div>
 <script>document.getElementById("f").addEventListener("submit",async e=>{e.preventDefault();const er=document.getElementById("err");er.textContent="";const fd=new FormData(e.target);try{const r=await fetch("/api/auth/login",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({username:fd.get("username"),password:fd.get("password")})});const d=await r.json();if(!r.ok){er.textContent=d.error||"登录失败";return}location.href="/"}catch{er.textContent="网络错误"}});</script></body></html>`;
 
 const REGISTER_PAGE=`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>注册</title>

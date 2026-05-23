@@ -2,344 +2,348 @@ export const DINGTALK_PAGE = `<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>钉钉视频下载 — S-MAIL</title>
 <style>
-:root{--bg:#f8fafc;--panel:#fff;--text:#0f172a;--muted:#64748b;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--amber:#ca8a04;--line:#e2e8f0;--font:"Google Sans","PingFang SC",system-ui,sans-serif;--radius:10px;--shadow:0 1px 2px rgba(0,0,0,.04)}
+:root{
+  --bg:#f0f2f5;--panel:#fff;--text:#0f172a;--muted:#64748b;
+  --blue:#2563eb;--blue-lt:#eff6ff;--green:#16a34a;--red:#dc2626;--amber:#ca8a04;
+  --line:#e2e8f0;--hover:#f1f5f9;--tag:#f8fafc;
+  --font:"Google Sans","PingFang SC",system-ui,sans-serif;
+  --radius:14px;--radius-sm:10px;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.12);
+  --sidebar-w:220px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0f172a;--panel:#1e293b;--text:#e2e8f0;--muted:#94a3b8;
+    --blue:#60a5fa;--blue-lt:rgba(96,165,250,.12);--green:#4ade80;--red:#f87171;--amber:#fbbf24;
+    --line:#334155;--hover:rgba(255,255,255,.05);--tag:#1e293b;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+    --shadow:0 1px 3px rgba(0,0,0,.4);
+    --shadow-md:0 4px 12px rgba(0,0,0,.5);
+    --shadow-lg:0 12px 40px rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+  input,select,textarea{background:var(--panel)!important;color:var(--text)!important}
+  .status-item,.job-events,.file-item,.legal-text,.admin-table th{background:var(--tag)!important}
+  .metric .value{color:var(--text)}
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;-webkit-font-smoothing:antialiased}
 a{color:var(--blue);text-decoration:none}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+@media (prefers-color-scheme:dark){::-webkit-scrollbar-thumb{background:#475569}}
 
-/* sidebar */
-#sidebar{width:232px;min-height:100vh;background:var(--panel);border-right:1px solid var(--line);padding:20px 0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
-.brand{display:flex;align-items:center;gap:10px;padding:0 20px 20px;border-bottom:1px solid var(--line);margin-bottom:12px}
-.brand-dot{width:30px;height:30px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:700}
-.brand-text{font-size:15px;font-weight:600;color:var(--text)}
-.nav-group-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:12px 20px 6px}
-.nav-item{padding:9px 20px;cursor:pointer;font-size:13px;color:var(--muted);transition:all .15s;display:flex;align-items:center;gap:8px;border-left:3px solid transparent;position:relative}
-.nav-item:hover{color:var(--text);background:#f1f5f9}
-.nav-item.active{color:var(--blue);background:#eff6ff;border-left-color:var(--blue);font-weight:500}
-.nav-item.admin-only{display:none}
-.nav-item.admin-only.show{display:flex}
-.nav-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .25s}
-.nav-dot.done{background:var(--green);border-color:var(--green);color:#fff}
-.nav-dot.warn{background:var(--amber);border-color:var(--amber);color:#fff}
-.nav-item.active .nav-dot:not(.done):not(.warn){border-color:var(--blue);color:var(--blue)}
-.nav-step-badge{font-size:10px;margin-left:auto;padding:2px 8px;border-radius:10px;font-weight:600}
-.nav-step-badge.ok{background:#dcfce7;color:#166534}
-.nav-step-badge.no{background:#fee2e2;color:#991b1b}
-.sidebar-footer{padding:20px;margin-top:auto;border-top:1px solid var(--line)}
-.sidebar-footer a{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);transition:color .15s}
-.sidebar-footer a:hover{color:var(--blue)}
+/* sidebar — desktop only */
+#sidebar{display:none}
+#topbar{display:none}
+@media (min-width:768px){
+  body{display:flex}
+  #topbar{display:none}
+  #sidebar{display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--panel);border-right:1px solid var(--line);z-index:100;overflow-y:auto;padding:0}
+  .sidebar-brand{padding:20px 18px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .sidebar-brand-icon{width:34px;height:34px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;font-weight:700;flex-shrink:0}
+  .sidebar-brand-text{font-size:14px;font-weight:600}
+  .sidebar-nav{flex:1;padding:8px 0;overflow-y:auto}
+  .sidebar-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:16px 18px 6px}
+  .sidebar-item{padding:9px 18px;cursor:pointer;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:10px;border-left:3px solid transparent;transition:all .15s ease;margin:0 0 1px}
+  .sidebar-item svg{width:18px;height:18px;opacity:.6;flex-shrink:0;transition:opacity .15s}
+  .sidebar-item:hover{color:var(--text);background:var(--hover)}
+  .sidebar-item.active{color:var(--blue);background:var(--blue-lt);border-left-color:var(--blue);font-weight:500}
+  .sidebar-item.active svg{opacity:1}
+  .sidebar-footer{padding:16px 18px;border-top:1px solid var(--line);margin-top:auto}
+  .sidebar-footer a{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;transition:color .15s}
+  .sidebar-footer a:hover{color:var(--text)}
+  #main{margin-left:var(--sidebar-w);padding:28px 36px 40px;max-width:calc(960px + var(--sidebar-w))}
+  #bottom-nav{display:none}
+  .metrics{grid-template-columns:repeat(4,1fr)}
+  .status-grid{grid-template-columns:repeat(3,1fr)}
+}
 
-/* main */
-#main{flex:1;padding:36px 40px;overflow-y:auto;max-height:100vh}
-.page{display:none;animation:fadeIn .2s ease}
-.page.active{display:block}
-@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+/* top bar — mobile only */
+#topbar{position:sticky;top:0;z-index:100;background:var(--panel);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;gap:10px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);background:rgba(255,255,255,.85)}
+@media (prefers-color-scheme:dark){#topbar{background:rgba(30,41,59,.9)}}
+#topbar-title{font-size:15px;font-weight:600;flex:1}
+#guest-badge{font-size:10px;background:var(--blue);color:#fff;padding:3px 8px;border-radius:10px;font-weight:500;display:none;letter-spacing:.2px}
+@media (min-width:768px){#topbar{display:none}}
 
-h1{font-size:22px;font-weight:600;margin-bottom:24px;letter-spacing:-.3px}
+/* main content */
+#main{flex:1;padding:12px 16px 80px;overflow-y:auto;max-width:640px;margin:0 auto}
+.tab{display:none;animation:fadeIn .25s ease}
+.tab.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+h2{font-size:16px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 
 /* cards */
-.card{background:var(--panel);border-radius:14px;border:1px solid var(--line);padding:24px;margin-bottom:20px;box-shadow:var(--shadow)}
-.card h2{font-size:15px;font-weight:600;margin-bottom:16px;color:var(--text);display:flex;align-items:center;gap:8px}
+.card{background:var(--panel);border-radius:var(--radius);border:1px solid var(--line);padding:18px;margin-bottom:12px;box-shadow:var(--shadow);transition:box-shadow .2s}
+.card h3{font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text)}
 
 /* metric cards */
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:24px}
-.metric{background:var(--panel);border-radius:14px;border:1px solid var(--line);padding:18px 20px;box-shadow:var(--shadow);transition:transform .15s}
-.metric:hover{transform:translateY(-1px)}
-.metric .label{font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px}
-.metric .value{font-size:30px;font-weight:700;color:var(--text);line-height:1}
-.metric .sub{font-size:11px;color:var(--muted);margin-top:4px}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.metric{background:var(--panel);border-radius:var(--radius);border:1px solid var(--line);padding:14px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s}
+.metric::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .2s}
+.metric:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.metric:nth-child(1)::before{background:var(--blue);opacity:1}
+.metric:nth-child(2)::before{background:var(--amber);opacity:1}
+.metric:nth-child(3)::before{background:var(--green);opacity:1}
+.metric:nth-child(4)::before{background:var(--red);opacity:1}
+.metric .label{font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.metric .value{font-size:28px;font-weight:700;color:var(--text);line-height:1}
+.metric .value.ok{color:var(--green)}
+.metric .value.warn{color:var(--amber)}
+.metric .value.err{color:var(--red)}
+.metric .value.info{color:var(--blue)}
 
-/* form elements */
+/* status grid */
+.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.status-item{background:var(--tag);border-radius:10px;padding:10px 12px;text-align:center;transition:background .15s}
+.status-item .s-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;font-weight:600}
+.status-item .s-val{font-size:13px;font-weight:500}
+
+/* form */
 input[type="text"],input[type="password"],input[type="number"],select,textarea{
-width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font:inherit;font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s;background:#fff;color:var(--text)
+width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s;background:var(--panel);color:var(--text)
 }
-input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
-button{background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px 20px;font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
-button:hover{background:#1d4ed8;transform:translateY(-.5px);box-shadow:0 2px 8px rgba(37,99,235,.25)}
-button:active{transform:translateY(0)}
-button:disabled{background:#94a3b8;cursor:not-allowed;transform:none;box-shadow:none}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+button{background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px 20px;font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s ease;display:inline-flex;align-items:center;justify-content:center;gap:6px;user-select:none;-webkit-tap-highlight-color:transparent}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
-.btn-ghost:hover{background:#f8fafc;color:var(--text);transform:none;box-shadow:none}
+.btn-ghost:hover{background:var(--hover);color:var(--text)}
 .btn-danger{background:var(--red)}
-.btn-danger:hover{background:#b91c1c;box-shadow:0 2px 8px rgba(220,38,38,.25)}
+.btn-danger:hover{opacity:.9}
+.btn-danger:active{opacity:.8;transform:scale(.97)}
 .btn-sm{padding:6px 14px;font-size:12px;border-radius:8px}
+.btn-block{width:100%}
+
+/* bottom nav — mobile only */
+#bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--panel);border-top:1px solid var(--line);display:flex;padding:4px 0 env(safe-area-inset-bottom,4px) 0;box-shadow:0 -1px 8px rgba(0,0,0,.06);max-width:640px;margin:0 auto}
+@media (min-width:768px){#bottom-nav{display:none}}
+.nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 4px;cursor:pointer;border:none;background:none;color:var(--muted);font-size:10px;font-weight:500;transition:color .15s;-webkit-tap-highlight-color:transparent;position:relative}
+.nav-tab::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:0;height:2px;background:var(--blue);border-radius:0 0 2px 2px;transition:width .2s}
+.nav-tab.active{color:var(--blue)}
+.nav-tab.active::before{width:24px}
+.nav-tab svg{width:22px;height:22px;flex-shrink:0}
 
 /* status badges */
-.status-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}
-.status-row:last-child{border-bottom:none}
-.status-label{color:var(--muted);width:110px;flex-shrink:0}
-.status-val{flex:1;font-weight:500}
 .status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
-.badge-ok{background:#dcfce7;color:#166534}
-.badge-no{background:#fee2e2;color:#991b1b}
-.badge-warn{background:#fef9c3;color:#854d0e}
-.badge-info{background:#dbeafe;color:#1e40af}
+.badge-ok{background:rgba(22,163,74,.1);color:var(--green)}
+.badge-no{background:rgba(220,38,38,.1);color:var(--red)}
+.badge-warn{background:rgba(202,138,4,.1);color:var(--amber)}
+.badge-info{background:rgba(37,99,235,.1);color:var(--blue)}
 
-/* url form */
-.url-form{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
-.url-form input{flex:1;min-width:200px}
-
-/* jobs */
-.job-item{border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:10px;cursor:pointer;transition:all .15s;background:var(--panel)}
-.job-item:hover{border-color:var(--blue);box-shadow:0 2px 8px rgba(0,0,0,.04)}
-.job-item.expanded{border-color:var(--blue);box-shadow:0 2px 8px rgba(37,99,235,.08)}
-.job-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.job-id{font-size:11px;color:var(--muted);font-family:"SF Mono",monospace;background:#f1f5f9;padding:2px 8px;border-radius:4px}
-.job-title{font-size:13px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.job-status{padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;flex-shrink:0}
-.job-meta{display:flex;gap:16px;font-size:12px;color:var(--muted)}
-.job-detail{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+/* job items */
+.job-item{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:8px;cursor:pointer;transition:all .15s ease;background:var(--panel)}
+.job-item:hover{border-color:var(--muted)}
+.job-item:active{transform:scale(.995)}
+.job-item.expanded{border-color:var(--blue);box-shadow:var(--shadow-md)}
+.job-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.job-id{font-size:10px;color:var(--muted);font-family:"SF Mono","JetBrains Mono",monospace;background:var(--tag);padding:2px 8px;border-radius:4px;letter-spacing:.3px}
+.job-title{font-size:13px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.job-status{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;flex-shrink:0}
+.job-meta{display:flex;gap:14px;font-size:11px;color:var(--muted);flex-wrap:wrap}
+.job-detail{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);animation:fadeIn .2s ease}
 .job-item.expanded .job-detail{display:block}
-.job-progress-bar{height:4px;background:#e2e8f0;border-radius:2px;margin:8px 0;overflow:hidden}
+.job-progress-bar{height:4px;background:var(--line);border-radius:2px;margin:6px 0;overflow:hidden}
 .job-progress-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .4s ease}
-.job-events{margin-top:10px;max-height:180px;overflow-y:auto;font-size:11px;font-family:"SF Mono",monospace;background:#f8fafc;border-radius:8px;padding:10px}
+.job-events{margin-top:8px;max-height:160px;overflow-y:auto;font-size:10px;font-family:"SF Mono","JetBrains Mono",monospace;background:var(--tag);border-radius:8px;padding:8px}
 .job-event{padding:2px 0;color:var(--muted)}
 .job-event.error{color:var(--red)}
 .job-event.success{color:var(--green)}
 .files-list{margin-top:8px}
-.file-item{display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:13px;background:#f8fafc;border-radius:8px;margin-bottom:4px}
-.file-item a{color:var(--blue);font-size:12px;font-weight:500;padding:4px 12px;background:#eff6ff;border-radius:6px;transition:all .15s}
-.file-item a:hover{background:var(--blue);color:#fff}
-.retention-hint{font-size:11px;color:var(--muted);margin-top:8px;display:flex;align-items:center;gap:4px}
+.file-item{display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:12px;background:var(--tag);border-radius:8px;margin-bottom:4px;justify-content:space-between}
+.retention-hint{font-size:10px;color:var(--muted);margin-top:6px}
+.dl-btn{display:inline-flex;align-items:center;gap:4px;background:var(--blue);color:#fff;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:500;text-decoration:none;transition:all .15s}
+.dl-btn:hover{opacity:.9;transform:translateY(-1px)}
+.dl-btn:active{transform:scale(.97)}
 
 /* pagination */
-.pagination{display:flex;align-items:center;gap:8px;margin-top:16px;justify-content:center}
-.pagination button{padding:6px 14px;font-size:12px}
-.page-info{font-size:12px;color:var(--muted);margin:0 8px}
+.pagination{display:flex;align-items:center;gap:8px;margin-top:14px;justify-content:center}
+.pagination button{padding:6px 16px;font-size:12px}
+.page-info{font-size:12px;color:var(--muted);min-width:60px;text-align:center}
+
+/* settings */
+.legal-text{background:var(--tag);border-radius:10px;padding:14px;font-size:12px;line-height:1.8;max-height:280px;overflow-y:auto;margin-bottom:14px;border:1px solid var(--line)}
+.checkbox-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;cursor:pointer}
+.checkbox-row input[type="checkbox"]{width:16px;height:16px;accent-color:var(--blue);cursor:pointer}
 
 /* qr */
-.qr-box{display:flex;flex-direction:column;align-items:center;gap:16px;padding:24px}
-.qr-image{width:220px;height:220px;border:2px dashed var(--line);border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:border-color .3s}
+.qr-box{display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px}
+.qr-image{width:200px;height:200px;border:2px dashed var(--line);border-radius:16px;background:var(--tag);display:flex;align-items:center;justify-content:center;overflow:hidden;transition:border-color .2s}
 .qr-image.has-code{border-style:solid;border-color:var(--line)}
-.qr-image img{max-width:200px;max-height:200px;display:block}
-.qr-spinner{width:36px;height:36px;border:3px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
+.qr-image img{max-width:180px;max-height:180px;display:block}
+.qr-spinner{width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.qr-status{font-size:13px;color:var(--muted);text-align:center;min-height:20px}
-.login-actions{display:flex;gap:10px;justify-content:center}
-.qr-hint{font-size:11px;color:var(--muted);text-align:center;max-width:280px;line-height:1.6}
-
-/* legal */
-.legal-text{background:#f8fafc;border-radius:10px;padding:20px;font-size:13px;line-height:1.8;max-height:360px;overflow-y:auto;margin-bottom:20px;border:1px solid var(--line)}
-.checkbox-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;font-size:14px}
-.checkbox-row input[type="checkbox"]{width:18px;height:18px;accent-color:var(--blue)}
-
-/* password section */
-.pw-form{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
-.pw-form input{flex:1;min-width:160px;max-width:260px}
-.pw-hint{font-size:12px;color:var(--muted);margin-top:8px}
-.pw-strength{height:3px;border-radius:2px;margin-top:6px;transition:all .25s;max-width:260px}
+.qr-status{font-size:12px;color:var(--muted);text-align:center;min-height:18px}
 
 /* gate */
-#gate{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+#gate{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:200;align-items:flex-end;justify-content:center;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 #gate.show{display:flex}
-.gate-card{background:#fff;border-radius:18px;padding:32px;max-width:480px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
-.gate-card h2{font-size:18px;margin-bottom:6px}
-.gate-card p{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6}
-.gate-progress{display:flex;gap:4px;margin-bottom:24px}
+.gate-card{background:var(--panel);border-radius:18px 18px 0 0;padding:24px 20px 32px;width:100%;max-width:640px;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.gate-card h2{font-size:16px;margin-bottom:4px}
+.gate-card p{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6}
+.gate-progress{display:flex;gap:4px;margin-bottom:20px}
 .gate-step-bar{flex:1;height:3px;background:var(--line);border-radius:2px;transition:background .3s}
 .gate-step-bar.done{background:var(--green)}
 .gate-step-bar.current{background:var(--blue)}
-.gate-state{display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px;text-align:center}
-.gate-icon{font-size:48px;line-height:1}
-.gate-icon.ok{color:var(--green)}
-.gate-icon.no{color:var(--red)}
-.gate-icon.warn{color:var(--amber)}
-.gate-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
 
 /* toast */
-#toast-container{position:fixed;top:20px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:8px}
-.toast{padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.12);animation:slideIn .25s ease;max-width:380px;display:flex;align-items:center;gap:8px}
-.toast.ok{background:#166534;color:#fff}
-.toast.err{background:#991b1b;color:#fff}
-.toast.info{background:#1e40af;color:#fff}
-@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+#toast-container{position:fixed;top:16px;right:12px;left:12px;z-index:300;display:flex;flex-direction:column;gap:8px;max-width:640px;margin:0 auto;pointer-events:none}
+.toast{padding:12px 16px;border-radius:12px;font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);animation:slideIn .3s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;gap:8px;pointer-events:auto}
+.toast.ok{background:#059669;color:#fff}
+.toast.err{background:#dc2626;color:#fff}
+.toast.info{background:var(--blue);color:#fff}
+@media (prefers-color-scheme:dark){.toast.ok{background:#059669}.toast.err{background:#b91c1c}.toast.info{background:#2563eb}}
+@keyframes slideIn{from{opacity:0;transform:translateY(-12px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
 
 /* admin */
-.admin-section{margin-bottom:32px}
-.admin-section h2{font-size:16px;font-weight:600;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
-.admin-table{width:100%;border-collapse:collapse;font-size:13px}
-.admin-table th{text-align:left;padding:8px 12px;background:#f8fafc;color:var(--muted);font-weight:500;border-bottom:1px solid var(--line);font-size:11px;text-transform:uppercase;letter-spacing:.3px}
-.admin-table td{padding:10px 12px;border-bottom:1px solid var(--line)}
-.admin-table tr:hover td{background:#f8fafc}
-.admin-textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit;font-size:13px;min-height:200px;resize:vertical;margin-top:8px}
-.loading{text-align:center;padding:40px;color:var(--muted)}
-.error-msg{color:var(--red);font-size:13px;padding:10px 14px;background:#fee2e2;border-radius:8px;margin-bottom:12px}
-.info-msg{color:#166534;font-size:13px;padding:10px 14px;background:#dcfce7;border-radius:8px;margin-bottom:12px}
+.admin-section{margin-bottom:28px}
+.admin-section h3{font-size:14px;font-weight:600;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.admin-table{width:100%;border-collapse:collapse;font-size:11px}
+.admin-table th{text-align:left;padding:7px 8px;background:var(--tag);color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);font-size:10px;text-transform:uppercase;letter-spacing:.3px}
+.admin-table td{padding:9px 8px;border-bottom:1px solid var(--line);font-size:11px}
+.admin-table tr:hover td{background:var(--hover)}
+.admin-table tr:active td{background:var(--hover)}
+.admin-textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit;font-size:13px;min-height:180px;resize:vertical;margin-top:6px;background:var(--panel);color:var(--text)}
 
-/* empty state */
-.empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
-.empty-state .empty-icon{font-size:40px;margin-bottom:12px}
-.empty-state .empty-text{font-size:14px}
+/* utility */
+.error-msg{color:var(--red);font-size:12px;padding:8px 12px;background:rgba(220,38,38,.08);border-radius:8px;margin-bottom:10px}
+.info-msg{color:var(--green);font-size:12px;padding:8px 12px;background:rgba(22,163,74,.08);border-radius:8px;margin-bottom:10px}
+.empty-state{text-align:center;padding:40px 16px;color:var(--muted);font-size:13px}
+.empty-icon{font-size:40px;margin-bottom:10px;opacity:.4}
+.pw-form{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pw-form input{flex:1;min-width:120px}
+.pw-hint{font-size:11px;color:var(--muted);margin-top:8px}
 
-/* mobile bar - hidden on desktop */
-#mobile-bar{display:none}
-#sidebar-backdrop{display:none}
-
-/* mobile responsive */
-@media (max-width:768px){
-  body{flex-direction:column}
-  #mobile-bar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:100}
-  .hamburger{width:24px;height:18px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;background:none;border:none;padding:0}
-  .hamburger span{display:block;width:100%;height:2px;background:var(--text);border-radius:1px}
-  #sidebar{position:fixed;left:0;top:0;width:280px;height:100vh;z-index:500;transform:translateX(-100%);transition:transform .25s ease;box-shadow:2px 0 16px rgba(0,0,0,.15)}
-  #sidebar.open{transform:translateX(0)}
-  #sidebar-backdrop.show{display:block;position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:499}
-  #main{padding:16px;max-height:none}
-  .metrics{grid-template-columns:repeat(2,1fr);gap:8px}
-  .metric{padding:14px 16px}
-  .metric .value{font-size:24px}
-  .url-form{flex-direction:column}
-  .url-form input{min-width:auto}
-  .url-form input[type="number"]{width:100%}
-  .gate-card{padding:20px;max-width:95vw;max-height:90vh}
-  h1{font-size:18px;margin-bottom:16px}
-  .card{padding:16px;margin-bottom:16px}
-  .job-meta{flex-wrap:wrap;gap:8px;font-size:11px}
-  .pw-form{flex-direction:column}
-  .pw-form input{max-width:none}
-  .pw-strength{max-width:none}
-  .status-row{flex-wrap:wrap;gap:4px}
-  .status-label{width:auto}
-  #toast-container{top:8px;right:8px;left:8px}
-  .toast{max-width:none;font-size:12px}
-  .admin-table{font-size:10px}
-  .admin-table th,.admin-table td{padding:4px 6px}
-  .pagination{gap:4px}
-}
-@media (max-width:480px){
-  .metrics{grid-template-columns:1fr}
-  .gate-card{padding:16px;max-width:100vw;border-radius:12px}
-  #main{padding:12px}
-}
 </style>
 </head>
 <body>
 
-<!-- mobile top bar -->
-<div id="mobile-bar">
-  <button class="hamburger" onclick="toggleSidebar()" aria-label="菜单">
-    <span></span><span></span><span></span>
-  </button>
-  <span style="font-weight:600;font-size:14px">钉钉视频下载</span>
+<!-- top bar (mobile only) -->
+<div id="topbar">
+  <span id="topbar-title">钉钉视频下载</span>
+  <span id="guest-badge">免登录</span>
 </div>
-<div id="sidebar-backdrop" onclick="closeSidebar()"></div>
 
-<!-- sidebar -->
+<!-- desktop sidebar -->
 <div id="sidebar">
-  <div class="brand">
-    <div class="brand-dot">S</div>
-    <div class="brand-text">视频下载</div>
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-icon">S</div>
+    <div class="sidebar-brand-text">视频下载</div>
   </div>
-  <div class="nav">
-    <div class="nav-group-label">主菜单</div>
-    <div class="nav-item active" data-page="overview" onclick="navigate('overview')"><span class="nav-dot">○</span>仪表盘</div>
-    <div class="nav-item" data-page="jobs" onclick="navigate('jobs')"><span class="nav-dot">○</span>详细记录</div>
-    <div class="nav-group-label">设置</div>
-    <div class="nav-item" data-page="legal" onclick="navigate('legal')"><span class="nav-dot" id="step-legal">1</span>条款确认<span class="nav-step-badge no" id="badge-legal">未完成</span></div>
-    <div class="nav-item" data-page="qr" onclick="navigate('qr')"><span class="nav-dot" id="step-qr">2</span>钉钉验证<span class="nav-step-badge no" id="badge-qr">未完成</span></div>
-    <div class="nav-item" data-page="password" onclick="navigate('password')"><span class="nav-dot" id="step-pw">3</span>下载密码<span class="nav-step-badge no" id="badge-pw">未完成</span></div>
-    <div class="nav-group-label">管理</div>
-    <div class="nav-item admin-only" data-page="admin" onclick="navigate('admin')"><span class="nav-dot">5</span>管理页</div>
+  <div class="sidebar-nav">
+    <div class="sidebar-label">主菜单</div>
+    <div class="sidebar-item active" data-page="dashboard" onclick="switchTab('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> 仪表盘</div>
+    <div class="sidebar-item" data-page="jobs" onclick="switchTab('jobs')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg> 任务列表</div>
+    <div class="sidebar-label">设置</div>
+    <div class="sidebar-item" data-page="settings" id="sidebar-settings" onclick="switchTab('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> 设置</div>
+    <div class="sidebar-item admin-only" data-page="admin" onclick="switchTab('admin')" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2zm10-10V7a4 4 0 0 0-8 0v4h8z"/></svg> 管理页</div>
   </div>
-  <div class="sidebar-footer">
-    <a href="/">← 返回邮箱</a>
-  </div>
+  <div class="sidebar-footer"><a href="/">← 返回邮箱</a></div>
 </div>
 
 <!-- main content -->
 <div id="main">
 
-  <!-- overview -->
-  <div id="page-overview" class="page active">
-    <h1>仪表盘</h1>
+  <!-- Tab: Dashboard -->
+  <div id="tab-dashboard" class="tab active">
     <div class="metrics" id="metrics"></div>
 
     <div class="card">
-      <h2>状态概览</h2>
-      <div id="status-rows"></div>
+      <h3>状态概览</h3>
+      <div class="status-grid" id="status-grid"></div>
     </div>
 
     <div class="card">
-      <h2>提交下载任务</h2>
-      <div class="url-form">
-        <input type="text" id="url-input" placeholder="输入视频页面 URL" />
-        <input type="number" id="thread-input" placeholder="线程" style="width:100px" />
-        <button onclick="submitJob()">提交任务</button>
-      </div>
-      <div id="submit-error" class="error-msg" style="display:none"></div>
-      <div id="submit-info" class="info-msg" style="display:none"></div>
+      <h3>提交下载任务</h3>
+      <input type="text" id="url-input" placeholder="输入视频页面 URL" style="margin-bottom:8px" />
+      <input type="number" id="thread-input" placeholder="线程数（默认100）" />
+      <button onclick="submitJob()" class="btn-block" style="margin-top:8px">提交任务</button>
+      <div id="submit-error" class="error-msg" style="display:none;margin-top:8px"></div>
+      <div id="submit-info" class="info-msg" style="display:none;margin-top:8px"></div>
     </div>
 
     <div class="card">
-      <h2>最近任务</h2>
+      <h3>最近任务</h3>
       <div id="recent-jobs"></div>
-      <div style="margin-top:12px"><button class="btn-ghost" onclick="navigate('jobs')">查看全部 →</button></div>
+      <div style="margin-top:10px"><button class="btn-ghost btn-sm" onclick="switchTab('jobs')">查看全部 →</button></div>
     </div>
   </div>
 
-  <!-- legal -->
-  <div id="page-legal" class="page">
-    <h1>条款确认</h1>
+  <!-- Tab: Jobs -->
+  <div id="tab-jobs" class="tab">
     <div class="card">
-      <div id="legal-content"></div>
-    </div>
-  </div>
-
-  <!-- qr -->
-  <div id="page-qr" class="page">
-    <h1>钉钉验证</h1>
-    <div class="card">
-      <div id="qr-login-box" class="qr-box">
-        <div id="qr-image" class="qr-image"><div class="empty-state"><div class="empty-icon">📱</div><div class="empty-text" style="font-size:12px">点击下方按钮获取二维码</div></div></div>
-        <div id="qr-status" class="qr-status"></div>
-        <div class="login-actions">
-          <button id="btn-start-qr" onclick="startQRLogin()">获取二维码</button>
-          <button class="btn-ghost btn-sm" onclick="checkLoginStatus()">刷新状态</button>
-        </div>
-        <div class="qr-hint">二维码有效期为 5 分钟<br>请使用钉钉 App 扫码<br>请勿刷新页面</div>
-      </div>
-      <div id="qr-error" class="error-msg" style="display:none"></div>
-    </div>
-  </div>
-
-  <!-- password -->
-  <div id="page-password" class="page">
-    <h1>下载密码</h1>
-    <div class="card">
-      <h2>设置加密密码</h2>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">下载的视频将打包为加密 zip 文件，此密码为解压密码。设置后不可查看，请妥善保存。</p>
-      <div class="pw-form">
-        <input type="password" id="pw-input" placeholder="输入密码（至少4位）" />
-        <input type="password" id="pw-confirm" placeholder="确认密码" />
-        <button onclick="savePassword()">保存密码</button>
-      </div>
-      <div id="pw-msg" style="margin-top:12px"></div>
-      <div id="pw-status-row" class="status-row" style="margin-top:12px">
-        <span class="status-label">密码状态</span>
-        <span class="status-val" id="pw-state"></span>
-      </div>
-    </div>
-  </div>
-
-  <!-- jobs -->
-  <div id="page-jobs" class="page">
-    <h1>详细记录</h1>
-    <div class="card">
+      <h3>任务列表</h3>
       <div id="jobs-list"></div>
       <div class="pagination" id="jobs-pagination"></div>
     </div>
   </div>
 
-  <!-- admin -->
-  <div id="page-admin" class="page">
-    <h1>管理页</h1>
+  <!-- Tab: Settings -->
+  <div id="tab-settings" class="tab">
+    <div class="card">
+      <h3>条款确认</h3>
+      <div id="legal-content"></div>
+    </div>
+
+    <div class="card">
+      <h3>钉钉验证</h3>
+      <div id="qr-login-box" class="qr-box">
+        <div class="qr-image" id="qr-image"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;opacity:.3;margin-bottom:8px"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg><div style="font-size:11px">点击下方按钮获取二维码</div></div></div>
+        <div class="qr-status" id="qr-status"></div>
+        <div style="display:flex;gap:8px">
+          <button id="btn-start-qr" onclick="startQRLogin()">获取二维码</button>
+          <button class="btn-ghost btn-sm" onclick="checkLoginStatus()">刷新状态</button>
+        </div>
+        <div style="font-size:10px;color:var(--muted);text-align:center">有效期5分钟，请用钉钉 App 扫码</div>
+      </div>
+      <div id="qr-error" class="error-msg" style="display:none"></div>
+    </div>
+
+    <div class="card">
+      <h3>下载密码</h3>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">下载的视频将打包为加密 zip，此密码为解压密码。设置后不可查看。</p>
+      <div class="pw-form">
+        <input type="password" id="pw-input" placeholder="输入密码（至少4位）" />
+        <input type="password" id="pw-confirm" placeholder="确认密码" />
+        <button onclick="savePassword()">保存</button>
+      </div>
+      <div id="pw-msg" style="margin-top:8px;font-size:12px"></div>
+      <div style="margin-top:8px;font-size:12px;color:var(--muted)">密码状态: <span id="pw-state">—</span></div>
+    </div>
+  </div>
+
+  <!-- Tab: Admin -->
+  <div id="tab-admin" class="tab">
+    <h2>管理页</h2>
     <div id="admin-content"></div>
   </div>
 
 </div>
+
+<!-- bottom nav -->
+<nav id="bottom-nav">
+  <button class="nav-tab active" data-tab="dashboard" onclick="switchTab('dashboard')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    仪表盘
+  </button>
+  <button class="nav-tab" data-tab="jobs" onclick="switchTab('jobs')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
+    任务
+  </button>
+  <button class="nav-tab" data-tab="settings" id="nav-settings" onclick="switchTab('settings')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    设置
+  </button>
+</nav>
 
 <!-- toast container -->
 <div id="toast-container"></div>
@@ -352,18 +356,25 @@ button:disabled{background:#94a3b8;cursor:not-allowed;transform:none;box-shadow:
       <div class="gate-step-bar"></div>
       <div class="gate-step-bar"></div>
     </div>
-    <h2 id="gate-title">正在进行</h2>
-    <p id="gate-desc">请稍候...</p>
-    <div id="gate-body" class="gate-state"></div>
-    <div class="gate-actions"><button id="gate-btn" onclick="gateAction()" style="display:none">继续</button></div>
+    <h2 id="gate-title"></h2>
+    <p id="gate-desc"></p>
+    <div id="gate-body"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn-ghost" id="gate-skip" style="display:none" onclick="closeGate()">跳过</button>
+      <button id="gate-btn" style="display:none"></button>
+    </div>
   </div>
 </div>
 
 <script>
-let state = { user: null, status: null, legalState: null, legalText: '', currentPage: 1, totalPages: 1, jobs: [], loginSession: null, adminTab: 'users' };
+let state = { user: null, status: null, legalState: null, legalText: '', currentPage: 1, totalPages: 1, jobs: [], loginSession: null, currentTab: 'dashboard' };
 let pollTimer = null;
 const DT_TOKEN = window.__DT_TOKEN || '';
 const isGuest = !!DT_TOKEN;
+
+if (isGuest) {
+  document.getElementById('guest-badge').style.display = 'inline';
+}
 
 async function api(path, opts) {
   opts = opts || {};
@@ -372,94 +383,92 @@ async function api(path, opts) {
     h['x-dt-token'] = DT_TOKEN;
     opts.headers = h;
   }
-  const r = await fetch('/api' + path, { credentials: 'include', ...opts });
-  const d = await r.json();
-  if (!r.ok && r.status === 401) { if (!DT_TOKEN) location.href = '/login'; return null; }
-  return d;
+  try {
+    var r = await fetch('/api' + path, { credentials: 'include', ...opts });
+    var d = await r.json();
+    if (!r.ok && r.status === 401) { if (!DT_TOKEN) location.href = '/login'; return null; }
+    return d;
+  } catch(e) { return null; }
 }
 
 async function checkAuth() {
-  if (isGuest) { document.body.style.display = 'flex'; init(); return; }
-  const d = await api('/auth/me');
+  if (isGuest) { init(); return; }
+  var d = await api('/auth/me');
   if (!d || !d.ok || !d.user) {
     if (navigator.onLine) { location.href = '/login'; return; }
-    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:var(--font);text-align:center"><div><div style="font-size:48px;margin-bottom:16px">📡</div><p style="font-size:16px;color:var(--text,#0f172a);margin-bottom:8px">无网络连接</p><p style="font-size:13px;color:var(--muted,#64748b);margin-bottom:24px">检查网络连接后重试</p><button onclick="location.reload()" style="padding:10px 24px;background:var(--blue,#2563eb);color:#fff;border:none;border-radius:10px;font-size:14px;cursor:pointer">刷新</button></div></div>';
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:var(--font);text-align:center;padding:20px"><div><div style="font-size:48px;margin-bottom:16px">📡</div><p style="font-size:16px;color:var(--text);margin-bottom:8px">无网络连接</p><p style="font-size:13px;color:var(--muted);margin-bottom:24px">检查网络连接后重试</p><button onclick="location.reload()" style="padding:10px 24px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;cursor:pointer">刷新</button></div></div>';
     return;
   }
   state.user = d.user;
-  document.body.style.display = 'flex';
   init();
 }
 
 async function init() {
-  if (state.user.isSudo) document.querySelectorAll('.admin-only').forEach(el => el.classList.add('show'));
-
-  var hash = location.hash.replace(/^#/, '') || 'overview';
-  // Show page shell immediately for instant feedback
-  if (hash === 'legal' || hash === 'qr' || hash === 'password' || hash === 'admin' || hash === 'jobs') {
-    navigate(hash);
+  if (state.user && state.user.isSudo) {
+    var ns = document.getElementById('nav-settings');
+    if (ns) ns.insertAdjacentHTML('afterend', '<button class="nav-tab" data-tab="admin" onclick="switchTab(\\'admin\\')"><svg viewBox=\\"0 0 24 24\\" fill=\\"none\\" stroke=\\"currentColor\\" stroke-width=\\"1.8\\"><path d=\\"M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2zm10-10V7a4 4 0 0 0-8 0v4h8z\\"/></svg>管理</button>');
+    var sa = document.querySelector('.sidebar-item.admin-only');
+    if (sa) sa.style.display = 'flex';
   }
-
-  // Load status & legal in parallel
   await Promise.all([loadStatus(), loadLegal()]);
-  updateSidebarBadges();
-
-  // Check gates (skip gate if user is already on the relevant setup page)
-  if (state.status && !state.status.legal_accepted && hash !== 'legal') { showGate('legal'); return; }
-  if (state.status && !state.status.cookies_ready && hash !== 'qr') { showGate('qr'); return; }
-  if (state.status && !state.status.has_zip_password && hash !== 'password') { showGate('password'); return; }
-
-  // All gates passed: show target page
-  if (hash === 'jobs') { loadJobs(1); }
-  else if (hash !== 'legal' && hash !== 'qr' && hash !== 'password' && hash !== 'admin') { showOverview(); }
-
-  if (hash !== 'admin') startPolling();
+  checkGates();
 }
 
 async function loadStatus() {
-  const d = await api('/dingtalk/status');
+  var d = await api('/dingtalk/status' + (DT_TOKEN ? '?dt_token=' + DT_TOKEN : ''));
   if (d && d.ok) state.status = d;
 }
 
 async function loadLegal() {
-  const d = await api('/dingtalk/legal');
+  var d = await api('/dingtalk/legal');
   if (d) { state.legalState = { version: d.version, accepted: d.accepted }; state.legalText = d.text || ''; }
 }
 
+function checkGates() {
+  var s = state.status;
+  if (!s) return;
+  if (!s.legal_accepted) { showGate('legal'); return; }
+  if (!s.cookies_ready) { showGate('qr'); return; }
+  if (!s.has_zip_password) { showGate('password'); return; }
+  startPolling();
+}
+
 function showGate(type) {
-  const g = document.getElementById('gate');
-  const title = document.getElementById('gate-title');
-  const desc = document.getElementById('gate-desc');
-  const body = document.getElementById('gate-body');
-  const btn = document.getElementById('gate-btn');
-  const progress = document.getElementById('gate-progress');
+  var g = document.getElementById('gate');
+  var title = document.getElementById('gate-title');
+  var desc = document.getElementById('gate-desc');
+  var body = document.getElementById('gate-body');
+  var btn = document.getElementById('gate-btn');
+  var skip = document.getElementById('gate-skip');
+  var progress = document.getElementById('gate-progress');
   g.classList.add('show');
   btn.style.display = 'none';
+  skip.style.display = 'none';
 
-  const steps = { legal: 0, qr: 1, password: 2 };
-  const stepIdx = steps[type] || 0;
-  if (progress) {
-    progress.innerHTML = [0,1,2].map(i => '<div class="gate-step-bar' + (i < stepIdx ? ' done' : i === stepIdx ? ' current' : '') + '"></div>').join('');
-  }
+  var steps = { legal: 0, qr: 1, password: 2 };
+  var stepIdx = steps[type] || 0;
+  progress.innerHTML = [0,1,2].map(function(i) {
+    return '<div class="gate-step-bar' + (i < stepIdx ? ' done' : i === stepIdx ? ' current' : '') + '"></div>';
+  }).join('');
 
   if (type === 'legal') {
     title.textContent = '请先阅读并接受条款';
-    desc.textContent = '继续使用钉钉视频下载服务前，请接受以下免责声明';
-    body.innerHTML = '<div class="legal-text" style="max-height:260px;font-size:12px">' + renderMarkdown(state.legalText) + '</div><div class="checkbox-row"><input type="checkbox" id="gate-check"><label for="gate-check">我已阅读并接受上述所有条款</label></div>';
+    desc.textContent = '继续使用前需接受免责声明';
+    body.innerHTML = '<div class="legal-text" style="max-height:200px;font-size:11px">' + renderMarkdown(state.legalText) + '</div><div class="checkbox-row"><input type="checkbox" id="gate-check"><label for="gate-check">我已阅读并接受上述所有条款</label></div>';
     btn.style.display = 'inline-flex';
     btn.textContent = '接受条款';
     btn.onclick = acceptLegal;
   } else if (type === 'qr') {
     title.textContent = '请完成钉钉验证';
-    desc.textContent = '需要通过二维码登录获取有效的 Cookies 才能提交任务';
-    body.innerHTML = '<div class="gate-icon warn">📱</div><div style="font-size:14px">您尚未完成钉钉验证</div><div style="margin-top:12px"><button onclick="closeGate();navigate(&quot;qr&quot;)">前往验证 →</button></div>';
+    desc.textContent = '需要获取有效 Cookies 才能下载';
+    body.innerHTML = '<div style="text-align:center;padding:20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="width:48px;height:48px;opacity:.4;margin-bottom:12px"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg><div style="font-size:14px;margin-bottom:16px">您尚未完成钉钉验证</div></div>';
+    btn.style.display = 'inline-flex';
+    btn.textContent = '前往设置';
+    btn.onclick = function() { closeGate(); switchTab('settings'); };
   } else if (type === 'password') {
     title.textContent = '请设置下载密码';
-    desc.textContent = '下载的视频将打包为加密 zip，需要设置解压密码';
-    body.innerHTML = '<div class="gate-icon warn">🔑</div><div style="margin-bottom:12px;font-size:14px">请先设置下载密码</div>' +
-      '<input type="password" id="gate-pw" placeholder="输入密码（至少4位）" style="margin-bottom:8px" />' +
-      '<input type="password" id="gate-pw2" placeholder="确认密码" style="margin-bottom:8px" />' +
-      '<div id="gate-pw-err" style="color:#dc2626;font-size:13px;margin-bottom:8px"></div>';
+    desc.textContent = '下载的视频将打包为加密 zip';
+    body.innerHTML = '<div style="padding:8px 0"><input type="password" id="gate-pw" placeholder="输入密码（至少4位）" style="margin-bottom:8px" /><input type="password" id="gate-pw2" placeholder="确认密码" style="margin-bottom:8px" /><div id="gate-pw-err" style="color:#dc2626;font-size:12px;margin-bottom:4px"></div></div>';
     btn.style.display = 'inline-flex';
     btn.textContent = '保存密码';
     btn.onclick = gateSavePw;
@@ -467,57 +476,36 @@ function showGate(type) {
 }
 
 async function gateSavePw() {
-  const pw = document.getElementById('gate-pw').value;
-  const pw2 = document.getElementById('gate-pw2').value;
-  const err = document.getElementById('gate-pw-err');
+  var pw = document.getElementById('gate-pw').value;
+  var pw2 = document.getElementById('gate-pw2').value;
+  var err = document.getElementById('gate-pw-err');
   if (pw.length < 4) { err.textContent = '密码至少4位'; return; }
   if (pw !== pw2) { err.textContent = '两次输入不一致'; return; }
-  const d = await api('/dingtalk/zip-password', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: pw }) });
-  if (d && d.ok) { state.status.has_zip_password = true; closeGate(); showOverview(); }
-  else { err.textContent = d.error || '保存失败'; }
+  var d = await api('/dingtalk/zip-password', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: pw }) });
+  if (d && d.ok) { state.status.has_zip_password = true; closeGate(); startPolling(); }
+  else { err.textContent = (d && d.error) || '保存失败'; }
 }
 
 async function acceptLegal() {
-  const check = document.getElementById('gate-check');
-  if (!check.checked) { alert('请先勾选接受条款'); return; }
-  const d = await api('/dingtalk/legal', { method: 'POST' });
-  if (d && d.ok) {
-    state.legalState.accepted = true;
-    closeGate();
-    init();
-  }
+  if (!document.getElementById('gate-check').checked) { alert('请先勾选接受条款'); return; }
+  var d = await api('/dingtalk/legal', { method: 'POST' });
+  if (d && d.ok) { state.legalState.accepted = true; closeGate(); checkGates(); }
 }
 
 function closeGate() { document.getElementById('gate').classList.remove('show'); }
-function gateAction() {}
 
-function toggleSidebar() {
-  var sidebar = document.getElementById('sidebar');
-  var backdrop = document.getElementById('sidebar-backdrop');
-  var open = sidebar.classList.contains('open');
-  if (open) { sidebar.classList.remove('open'); backdrop.classList.remove('show'); }
-  else { sidebar.classList.add('open'); backdrop.classList.add('show'); }
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebar-backdrop').classList.remove('show');
-}
-
-function navigate(page) {
-  closeSidebar();
-  if (location.hash !== '#' + page) {
-    history.pushState(null, '', '#' + page);
-  }
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  var navItem = document.querySelector('.nav-item[data-page="' + page + '"]');
-  if (navItem) navItem.classList.add('active');
-  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-  if (page === 'jobs') loadJobs(1);
-  else if (page === 'admin') loadAdmin();
-  else if (page === 'qr') { if (!state.loginSession) checkLoginStatus(); }
-  else if (page === 'legal') renderLegal();
-  else if (page === 'password') renderPasswordPage();
+function switchTab(tab) {
+  if (state.currentTab === tab) return;
+  state.currentTab = tab;
+  document.querySelectorAll('.tab').forEach(function(el) { el.classList.remove('active'); });
+  var tabEl = document.getElementById('tab-' + tab);
+  if (tabEl) tabEl.classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(function(el) { el.classList.toggle('active', el.getAttribute('data-tab') === tab); });
+  document.querySelectorAll('.sidebar-item').forEach(function(el) { el.classList.toggle('active', el.getAttribute('data-page') === tab); });
+  if (tab === 'dashboard') showOverview();
+  else if (tab === 'jobs') loadJobs(1);
+  else if (tab === 'settings') renderSettings();
+  else if (tab === 'admin') loadAdmin();
 }
 
 function showOverview() {
@@ -527,155 +515,149 @@ function showOverview() {
 }
 
 function renderMetrics() {
-  const s = state.status || {};
-  const el = document.getElementById('metrics');
-  el.innerHTML = [
-    card('总任务', s.total_jobs || 0, ''),
-    card('排队中', s.queued_jobs || 0, 'badge-warn'),
-    card('执行中', s.running_jobs || 0, 'badge-info'),
-    card('已完成', s.succeeded_jobs || 0, 'badge-ok'),
-    card('已失败', s.failed_jobs || 0, 'badge-no'),
-  ].join('');
-  function card(label, value, badge) {
-    return '<div class="metric"><div class="label">' + label + '</div><div class="value">' + value + '</div></div>';
-  }
+  var s = state.status || {};
+  document.getElementById('metrics').innerHTML = [
+    { label: '总任务', value: s.total_jobs || 0, cls: '' },
+    { label: '排队中', value: s.queued_jobs || 0, cls: 'warn' },
+    { label: '已完成', value: s.succeeded_jobs || 0, cls: 'ok' },
+    { label: '已失败', value: s.failed_jobs || 0, cls: 'err' },
+  ].map(function(m) {
+    return '<div class="metric"><div class="label">' + m.label + '</div><div class="value' + (m.cls ? ' ' + m.cls : '') + '">' + m.value + '</div></div>';
+  }).join('');
 }
 
 function renderStatus() {
-  const s = state.status || {};
-  const legal = state.legalState || {};
-  const items = [
+  var s = state.status || {};
+  var leg = state.legalState || {};
+  var items = [
     ['Cookie', s.cookies_ready ? '已就绪' : '未就绪', s.cookies_ready ? 'ok' : 'no'],
-    ['条款', legal.accepted ? '已接受' : '未接受', legal.accepted ? 'ok' : 'no'],
+    ['条款', leg.accepted ? '已接受' : '未接受', leg.accepted ? 'ok' : 'no'],
     ['密码', s.has_zip_password ? '已设置' : '未设置', s.has_zip_password ? 'ok' : 'no'],
-    ['用户', state.user ? state.user.username : '-', ''],
-    ['管理员', state.user && state.user.isSudo ? '是' : '否', ''],
     ['保留期', s.artifact_retention_days ? s.artifact_retention_days + '天' : '-', ''],
     ['线程', s.default_thread || '-', ''],
   ];
-  document.getElementById('status-rows').innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px">' +
-    items.map(function(i) {
-      var badge = i[2] ? '<span class="status-badge badge-' + (i[2] === 'ok' ? 'ok' : 'no') + '" style="font-size:10px">' + i[1] + '</span>' : '<span style="font-weight:500">' + i[1] + '</span>';
-      return '<div style="background:#f8fafc;border-radius:10px;padding:12px 14px;text-align:center"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px">' + i[0] + '</div>' + badge + '</div>';
-    }).join('') + '</div>';
+  document.getElementById('status-grid').innerHTML = items.map(function(i) {
+    var badge = i[2] ? '<span class="status-badge badge-' + (i[2] === 'ok' ? 'ok' : 'no') + '" style="font-size:10px">' + i[1] + '</span>' : '<span style="font-weight:500">' + i[1] + '</span>';
+    return '<div class="status-item"><div class="s-label">' + i[0] + '</div><div class="s-val">' + badge + '</div></div>';
+  }).join('');
 }
 
 async function loadRecentJobs() {
-  const d = await api('/dingtalk/jobs?page_size=5');
+  var d = await api('/dingtalk/jobs?page_size=5' + (DT_TOKEN ? '&dt_token=' + DT_TOKEN : ''));
   if (!d) return;
-  const jobs = d.jobs || [];
+  var jobs = d.jobs || [];
   state.recentJobs = jobs;
-  const html = jobs.length ? jobs.map(j => jobRowHTML(j, false)).join('') : '<div style="color:var(--muted);padding:20px;text-align:center">暂无任务记录</div>';
-  document.getElementById('recent-jobs').innerHTML = html;
+  document.getElementById('recent-jobs').innerHTML = jobs.length
+    ? jobs.map(function(j) { return jobRowHTML(j, false); }).join('')
+    : '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;opacity:.3;margin-bottom:8px"><path d="M22 12h-6l-2 3H10l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg><div>暂无任务记录</div></div>';
 }
 
 function jobRowHTML(job, expanded) {
-  const statusMap = { queued: ['badge-warn','排队'], running: ['badge-info','执行中'], succeeded: ['badge-ok','完成'], failed: ['badge-no','失败'] };
-  const [cls, label] = statusMap[job.status] || ['badge-warn','未知'];
-  const pct = job.progress_percent || 0;
-  const errors = (job.errors || []).slice(0, 3);
-  const files = (job.files || []).slice(0, 5);
-  const dt = new Date(job.created_at).toLocaleString('zh-CN');
-  const retention = state.status?.artifact_retention_days || 90;
+  var statusMap = { queued: ['badge-warn','排队'], running: ['badge-info','执行中'], succeeded: ['badge-ok','完成'], failed: ['badge-no','失败'] };
+  var st = statusMap[job.status] || ['badge-warn','未知'];
+  var pct = job.progress_percent || 0;
+  var errors = (job.errors || []).slice(0, 3);
+  var files = (job.files || []).slice(0, 5);
+  var dt = new Date(job.created_at).toLocaleString('zh-CN');
+  var retention = (state.status && state.status.artifact_retention_days) || 90;
 
-  let eventsHtml = '';
+  var eventsHtml = '';
   if (expanded && job._events) {
-    eventsHtml = '<div class="job-events">' + (job._events.map(e => '<div class="job-event ' + (e.level === 'error' ? 'error' : e.level === 'success' ? 'success' : '') + '">[' + e.created_at.slice(0,19) + '] ' + escHtml(e.message) + '</div>').join('')) + '</div>';
+    eventsHtml = '<div class="job-events">' + job._events.map(function(e) {
+      return '<div class="job-event ' + (e.level === 'error' ? 'error' : e.level === 'success' ? 'success' : '') + '">[' + (e.created_at||'').slice(0,19) + '] ' + escHtml(e.message) + '</div>';
+    }).join('') + '</div>';
   }
 
-  let filesHtml = '';
+  var filesHtml = '';
   if (expanded && files.length) {
-    filesHtml = '<div class="files-list">' + files.map(f => '<div class="file-item"><span>' + escHtml(f.name || f.relative_path) + '</span>' + (f.download_url ? '<a href="' + escHtml(f.download_url) + '" target="_blank">下载加密包</a>' : '') + '</div>').join('') + '</div>' +
-      '<div class="retention-hint">文件为加密 zip，密码为您设置的下载密码。Artifacts 将在 ' + retention + ' 天后过期。</div>';
+    filesHtml = '<div class="files-list">' + files.map(function(f) {
+      var dl = f.download_url ? '<a class="dl-btn" href="' + escHtml(f.download_url) + '" download="' + escHtml(f.name || f.relative_path || 'download.zip') + '">下载</a>' : '';
+      return '<div class="file-item"><span>' + escHtml(f.name || f.relative_path) + '</span>' + dl + '</div>';
+    }).join('') + '</div><div class="retention-hint">加密 zip，密码为设置的下载密码。' + retention + '天后过期。</div>';
   }
 
-  // Succeeded jobs with full progress: show download button
-  let downloadBtn = '';
-  if (job.status === 'succeeded' && pct >= 100 && job.files && job.files.length && job.files[0].download_url) {
-    downloadBtn = '<a href="' + escHtml(job.files[0].download_url) + '" target="_blank" style="display:inline-block;background:var(--blue);color:#fff;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:500;margin-top:8px;text-decoration:none">下载加密包</a>';
+  var downloadBtn = '';
+  if (job.status === 'succeeded' && pct >= 100 && files.length && files[0].download_url) {
+    downloadBtn = '<a class="dl-btn" href="' + escHtml(files[0].download_url) + '" download="' + escHtml(files[0].name || 'download.zip') + '" style="margin-top:6px">下载加密包</a>';
   }
 
-  // Cancel button for queued/running jobs
   var cancelBtn = '';
   if (job.status === 'queued' || job.status === 'running') {
-    cancelBtn = '<button class="btn-ghost btn-sm" style="margin-top:8px;color:var(--red);border-color:var(--red)" onclick="event.stopPropagation();cancelJob(\\'' + job.id + '\\')">取消任务</button>';
+    cancelBtn = '<button class="btn-ghost btn-sm" style="color:var(--red);border-color:var(--red);margin-top:6px" onclick="event.stopPropagation();cancelJob(\\'' + job.id + '\\')">取消</button>';
   }
 
-  // Delete button (always shown, for cleanup)
-  var deleteBtn = '<button class="btn-ghost btn-sm" style="margin-top:8px;margin-left:6px;color:var(--muted)" onclick="event.stopPropagation();deleteJob(\\'' + job.id + '\\')">删除</button>';
+  var deleteBtn = '<button class="btn-ghost btn-sm" style="margin-top:6px;margin-left:4px" onclick="event.stopPropagation();deleteJob(\\'' + job.id + '\\')">删除</button>';
 
-  return '<div class="job-item' + (expanded ? ' expanded' : '') + '" data-job-id="' + job.id + '" onclick="toggleJob(this,&quot;' + job.id + '&quot;)">' +
+  return '<div class="job-item' + (expanded ? ' expanded' : '') + '" data-job-id="' + job.id + '" onclick="toggleJob(this,\\'' + job.id + '\\')">' +
     '<div class="job-header">' +
-      '<span class="job-id">' + job.id.slice(0,20) + '...</span>' +
+      '<span class="job-id">' + job.id.slice(0,16) + '</span>' +
       '<span class="job-title">' + escHtml(job.current_title || (job.urls && job.urls[0]) || '-') + '</span>' +
-      '<span class="job-status ' + cls + '">' + label + '</span>' +
+      '<span class="job-status ' + st[0] + '">' + st[1] + '</span>' +
     '</div>' +
-    '<div class="job-meta"><span>' + dt + '</span><span>线程: ' + job.thread + '</span><span>进度: ' + job.completed_parts + '/' + job.total_parts + '</span></div>' +
+    '<div class="job-meta"><span>' + dt + '</span><span>线程:' + job.thread + '</span><span>' + job.completed_parts + '/' + job.total_parts + '</span></div>' +
     downloadBtn + cancelBtn + deleteBtn +
-    ((job.status === 'running' || job.status === 'queued') ? '<div class="job-progress-bar"><div class="job-progress-fill" style="width:' + (pct || 5) + '%"></div></div><div style="font-size:11px;color:var(--muted);margin-top:2px">' + escHtml(job.stage || '等待中') + ' — ' + (pct || 0) + '%</div>' : '') +
-    (errors.length ? '<div style="font-size:12px;color:#dc2626;margin-top:6px">' + errors.join('; ') + '</div>' : '') +
+    ((job.status === 'running' || job.status === 'queued') ? '<div class="job-progress-bar"><div class="job-progress-fill" style="width:' + (pct || 3) + '%"></div></div><div style="font-size:10px;color:var(--muted);margin-top:2px">' + escHtml(job.stage || '等待中') + ' — ' + (pct || 0) + '%</div>' : '') +
+    (errors.length ? '<div style="font-size:11px;color:#dc2626;margin-top:4px">' + errors.join('; ') + '</div>' : '') +
     '<div class="job-detail">' + filesHtml + eventsHtml + '</div>' +
   '</div>';
 }
 
 async function toggleJob(el, jobId) {
   if (el.classList.contains('expanded')) { el.classList.remove('expanded'); return; }
-  document.querySelectorAll('.job-item').forEach(j => j.classList.remove('expanded'));
+  document.querySelectorAll('.job-item').forEach(function(j) { j.classList.remove('expanded'); });
   el.classList.add('expanded');
-  const d = await api('/dingtalk/jobs/' + jobId + '?include=events');
+  var d = await api('/dingtalk/jobs/' + jobId + '?include=events' + (DT_TOKEN ? '&dt_token=' + DT_TOKEN : ''));
   if (!d || !d.job) return;
   d.job._events = d.events || [];
-  const jobs = state.recentJobs || [];
-  const idx = jobs.findIndex(j => j.id === jobId);
+  var jobs = state.recentJobs || [];
+  var idx = jobs.findIndex(function(j) { return j.id === jobId; });
   if (idx >= 0) jobs[idx] = d.job;
-  const newEl = document.createElement('div');
+  var newEl = document.createElement('div');
   newEl.outerHTML = jobRowHTML(d.job, true);
   el.outerHTML = newEl.outerHTML;
 }
 
 async function loadJobs(page) {
   state.currentPage = page;
-  const d = await api('/dingtalk/jobs?page=' + page + '&page_size=10');
+  var d = await api('/dingtalk/jobs?page=' + page + '&page_size=10' + (DT_TOKEN ? '&dt_token=' + DT_TOKEN : ''));
   if (!d) return;
   state.jobs = d.jobs || [];
   state.totalPages = d.total_pages || 1;
-  const html = state.jobs.length
-    ? state.jobs.map(j => jobRowHTML(j, false)).join('')
-    : '<div style="color:var(--muted);padding:20px;text-align:center">暂无任务记录</div>';
-  document.getElementById('jobs-list').innerHTML = html;
+  document.getElementById('jobs-list').innerHTML = state.jobs.length
+    ? state.jobs.map(function(j) { return jobRowHTML(j, false); }).join('')
+    : '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;opacity:.3;margin-bottom:8px"><path d="M22 12h-6l-2 3H10l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg><div>暂无任务记录</div></div>';
   renderPagination(d.page, d.total_pages);
 }
 
 function renderPagination(page, total) {
-  const p = document.getElementById('jobs-pagination');
+  var p = document.getElementById('jobs-pagination');
   if (total <= 1) { p.innerHTML = ''; return; }
   p.innerHTML =
-    '<button class="btn-ghost" onclick="loadJobs(' + (page - 1) + ')" ' + (page <= 1 ? 'disabled' : '') + '>上一页</button>' +
-    '<span class="page-info">第 ' + page + ' / ' + total + ' 页</span>' +
-    '<button class="btn-ghost" onclick="loadJobs(' + (page + 1) + ')" ' + (page >= total ? 'disabled' : '') + '>下一页</button>';
+    '<button class="btn-ghost btn-sm" onclick="loadJobs(' + (page - 1) + ')" ' + (page <= 1 ? 'disabled' : '') + '>上一页</button>' +
+    '<span class="page-info">' + page + ' / ' + total + '</span>' +
+    '<button class="btn-ghost btn-sm" onclick="loadJobs(' + (page + 1) + ')" ' + (page >= total ? 'disabled' : '') + '>下一页</button>';
 }
 
 async function submitJob() {
-  const urlInput = document.getElementById('url-input');
-  const threadInput = document.getElementById('thread-input');
-  const errEl = document.getElementById('submit-error');
-  const infoEl = document.getElementById('submit-info');
+  var urlInput = document.getElementById('url-input');
+  var threadInput = document.getElementById('thread-input');
+  var errEl = document.getElementById('submit-error');
+  var infoEl = document.getElementById('submit-info');
   errEl.style.display = 'none';
   infoEl.style.display = 'none';
 
-  const url = urlInput.value.trim();
+  var url = urlInput.value.trim();
   if (!url) { errEl.textContent = '请输入 URL'; errEl.style.display = 'block'; return; }
 
-  const thread = parseInt(threadInput.value) || state.status?.default_thread || 100;
+  var thread = parseInt(threadInput.value) || (state.status && state.status.default_thread) || 100;
 
-  errEl.style.display = 'none';
   infoEl.textContent = '正在提交...';
   infoEl.style.display = 'block';
 
-  const d = await api('/dingtalk/jobs', {
+  var d = await api('/dingtalk/jobs', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ url, thread, create_video_list: true })
+    body: JSON.stringify({ url: url, thread: thread, create_video_list: true })
   });
 
   if (!d) return;
@@ -687,41 +669,52 @@ async function submitJob() {
     infoEl.textContent = '任务已提交！';
     urlInput.value = '';
     threadInput.value = '';
-    await loadStatus();
+    loadStatus();
     showOverview();
-    setTimeout(() => { infoEl.style.display = 'none'; }, 3000);
+    setTimeout(function() { infoEl.style.display = 'none'; }, 3000);
   }
 }
 
 async function cancelJob(jobId) {
   if (!confirm('确定要取消此任务吗？')) return;
   var d = await api('/dingtalk/jobs/' + jobId + '/cancel', { method: 'POST' });
-  if (d && d.ok) {
-    toast('任务已取消', 'info');
-    await loadStatus();
-    showOverview();
-  } else {
-    toast(d?.error || '取消失败', 'err');
-  }
+  if (d && d.ok) { toast('任务已取消', 'info'); loadStatus(); showOverview(); }
+  else { toast((d && d.error) || '取消失败', 'err'); }
 }
 
 async function deleteJob(jobId) {
   if (!confirm('确定要删除此任务记录吗？')) return;
   var d = await api('/dingtalk/jobs/' + jobId, { method: 'DELETE' });
-  if (d && d.ok) {
-    toast('已删除', 'info');
-    await loadStatus();
-    showOverview();
-    if (document.getElementById('page-jobs').classList.contains('active')) loadJobs(state.currentPage);
-  } else {
-    toast(d?.error || '删除失败', 'err');
-  }
+  if (d && d.ok) { toast('已删除', 'info'); loadStatus(); showOverview(); if (document.getElementById('tab-jobs').classList.contains('active')) loadJobs(state.currentPage); }
+  else { toast((d && d.error) || '删除失败', 'err'); }
 }
 
-// ── Password page ──
-async function renderPasswordPage() {
-  const d = await api('/dingtalk/zip-password');
-  const hasPw = d && d.has_password;
+// ── Settings ──
+function renderSettings() {
+  renderLegal();
+  renderPasswordState();
+  if (!state.loginSession) checkLoginStatus();
+}
+
+function renderLegal() {
+  var leg = state.legalState || {};
+  var accepted = leg.accepted;
+  document.getElementById('legal-content').innerHTML =
+    '<div style="margin-bottom:12px"><span class="status-badge ' + (accepted ? 'badge-ok' : 'badge-warn') + '">' + (accepted ? '已接受' : '未接受') + '</span></div>' +
+    '<div class="legal-text">' + renderMarkdown(state.legalText) + '</div>' +
+    (!accepted ? '<div class="checkbox-row"><input type="checkbox" id="legal-check"><label for="legal-check">我已阅读并接受上述所有条款</label></div><button onclick="acceptLegalFromPage()">接受条款</button>' : '<div style="color:#166534;font-size:13px">✓ 您已接受当前版本条款</div>');
+}
+
+async function acceptLegalFromPage() {
+  var check = document.getElementById('legal-check');
+  if (check && !check.checked) { alert('请先勾选接受条款'); return; }
+  var d = await api('/dingtalk/legal', { method: 'POST' });
+  if (d && d.ok) { state.legalState.accepted = true; renderLegal(); }
+}
+
+async function renderPasswordState() {
+  var d = await api('/dingtalk/zip-password');
+  var hasPw = d && d.has_password;
   document.getElementById('pw-state').innerHTML = hasPw
     ? '<span class="status-badge badge-ok">已设置</span>'
     : '<span class="status-badge badge-no">未设置</span>';
@@ -731,12 +724,12 @@ async function renderPasswordPage() {
 }
 
 async function savePassword() {
-  const pw = document.getElementById('pw-input').value;
-  const pw2 = document.getElementById('pw-confirm').value;
-  const msg = document.getElementById('pw-msg');
+  var pw = document.getElementById('pw-input').value;
+  var pw2 = document.getElementById('pw-confirm').value;
+  var msg = document.getElementById('pw-msg');
   if (pw.length < 4) { msg.textContent = '密码至少4位'; msg.style.color = '#dc2626'; return; }
   if (pw !== pw2) { msg.textContent = '两次输入不一致'; msg.style.color = '#dc2626'; return; }
-  const d = await api('/dingtalk/zip-password', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: pw }) });
+  var d = await api('/dingtalk/zip-password', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: pw }) });
   if (d && d.ok) {
     msg.textContent = '密码已保存'; msg.style.color = '#166534';
     state.status.has_zip_password = true;
@@ -744,20 +737,19 @@ async function savePassword() {
     document.getElementById('pw-input').value = '';
     document.getElementById('pw-confirm').value = '';
   } else {
-    msg.textContent = d.error || '保存失败'; msg.style.color = '#dc2626';
+    msg.textContent = (d && d.error) || '保存失败'; msg.style.color = '#dc2626';
   }
 }
 
 // ── QR Login ──
 async function startQRLogin() {
-  const errEl = document.getElementById('qr-error');
-  const statusEl = document.getElementById('qr-status');
-  const btn = document.getElementById('btn-start-qr');
+  var errEl = document.getElementById('qr-error');
   errEl.style.display = 'none';
+  var btn = document.getElementById('btn-start-qr');
   btn.disabled = true;
-  statusEl.textContent = '正在启动登录流程...';
+  document.getElementById('qr-status').textContent = '正在启动...';
 
-  const d = await api('/dingtalk/login-workflow', { method: 'POST' });
+  var d = await api('/dingtalk/login-workflow', { method: 'POST' });
   btn.disabled = false;
   if (!d) return;
   if (d.error) { errEl.textContent = d.error; errEl.style.display = 'block'; return; }
@@ -768,140 +760,104 @@ async function startQRLogin() {
     if (qrSrc) {
       document.getElementById('qr-image').className = 'qr-image has-code';
       document.getElementById('qr-image').innerHTML = '<img src="' + qrSrc + '" alt="QR Code" />';
-      statusEl.textContent = '二维码已生成，请在钉钉 App 中扫码';
+      document.getElementById('qr-status').textContent = '请用钉钉 App 扫码';
     } else {
       document.getElementById('qr-image').className = 'qr-image';
-      statusEl.textContent = '已启动，请等待 GitHub Actions 生成二维码（约10-30秒）...';
+      document.getElementById('qr-status').textContent = '等待生成二维码（约10-30秒）...';
       document.getElementById('qr-image').innerHTML = '<div class="qr-spinner"></div>';
     }
   } else {
     document.getElementById('qr-image').className = 'qr-image';
-    statusEl.textContent = '已启动，请等待 GitHub Actions 生成二维码（约10-30秒）...';
+    document.getElementById('qr-status').textContent = '等待生成二维码（约10-30秒）...';
     document.getElementById('qr-image').innerHTML = '<div class="qr-spinner"></div>';
   }
 }
 
 async function checkLoginStatus() {
-  const errEl = document.getElementById('qr-error');
-  errEl.style.display = 'none';
+  var errEl = document.getElementById('qr-error');
+  if (errEl) errEl.style.display = 'none';
 
-  const d = await api('/dingtalk/login-workflow');
+  var d = await api('/dingtalk/login-workflow');
   if (!d) return;
   state.loginSession = d.login_session;
 
   if (!d.login_session) {
-    document.getElementById('qr-image').innerHTML = '';
-    document.getElementById('qr-status').textContent = '暂无登录会话，点击「获取二维码」开始';
+    document.getElementById('qr-image').innerHTML = '<div class="qr-spinner"></div>';
+    document.getElementById('qr-status').textContent = '暂无登录会话';
     return;
   }
 
-  const s = d.login_session;
+  var s = d.login_session;
   var qrSrc = getQRImageSrc(s);
   if (qrSrc) {
+    document.getElementById('qr-image').className = 'qr-image has-code';
     document.getElementById('qr-image').innerHTML = '<img src="' + qrSrc + '" alt="QR Code" />';
   } else if (s.qr_url) {
-    document.getElementById('qr-image').innerHTML = '<div style="padding:40px;color:var(--muted)">二维码已生成，请在钉钉 App 中打开链接扫码</div>';
+    document.getElementById('qr-image').innerHTML = '<div style="padding:30px;color:var(--muted);font-size:12px">二维码已生成</div>';
   }
 
-  const statusMap = {
-    pending: ['等待 GitHub Actions 启动（约 30 秒）', 'badge-warn'],
-    qr_ready: ['二维码已生成，请扫码（5 分钟内有效）', 'badge-info'],
-    completed: ['登录成功，Cookies 已保存', 'badge-ok'],
+  var statusMap = {
+    pending: ['等待启动（约30秒）', 'badge-warn'],
+    qr_ready: ['请扫码（5分钟有效）', 'badge-info'],
+    completed: ['登录成功', 'badge-ok'],
     failed: ['登录失败', 'badge-no'],
   };
-  const [label, cls] = statusMap[s.status] || ['未知状态: ' + s.status, 'badge-warn'];
-  var statusHtml = '<span class="status-badge ' + cls + '">' + label + '</span>';
+  var stInfo = statusMap[s.status] || ['未知: ' + s.status, 'badge-warn'];
+  var statusHtml = '<span class="status-badge ' + stInfo[1] + '">' + stInfo[0] + '</span>';
   if (s.status === 'failed' && s.error_message) {
-    statusHtml += '<div style="font-size:11px;color:var(--muted);margin-top:4px">' + escHtml(s.error_message) + '</div>';
+    statusHtml += '<div style="font-size:10px;color:var(--muted);margin-top:4px">' + escHtml(s.error_message) + '</div>';
   }
   if (s.status === 'qr_ready' && s.created_at) {
     var elapsed = Math.floor((Date.now() - new Date(s.created_at).getTime()) / 1000);
     var remaining = Math.max(0, 300 - elapsed);
-    statusHtml += '<div style="font-size:11px;color:var(--muted);margin-top:4px">剩余时间: ' + formatSeconds(remaining) + '</div>';
+    statusHtml += '<div style="font-size:10px;color:var(--muted);margin-top:4px">剩余: ' + formatSeconds(remaining) + '</div>';
     if (remaining <= 0) {
-      statusHtml += '<div style="margin-top:8px;color:var(--amber);font-size:13px">二维码已过期</div>';
-      statusHtml += '<div style="margin-top:6px"><button class="btn-ghost btn-sm" onclick="startQRLogin()">重新获取二维码</button></div>';
+      statusHtml += '<div style="margin-top:6px;color:var(--amber);font-size:12px">二维码已过期</div>';
+      statusHtml += '<button class="btn-ghost btn-sm" style="margin-top:4px" onclick="startQRLogin()">重新获取</button>';
     }
   }
   document.getElementById('qr-status').innerHTML = statusHtml;
 
   if (s.status === 'completed') {
     await loadStatus();
-    await loadLegal();
-    if (state.status && state.status.cookies_ready && state.status.legal_accepted) {
+    if (state.status && state.status.cookies_ready) {
       closeGate();
-      showOverview();
-      errEl.textContent = '登录成功！Cookies 已保存。';
-      errEl.style.display = 'block';
-      errEl.style.background = '#dcfce7';
-      errEl.style.color = '#166534';
+      if (errEl) { errEl.textContent = '登录成功！Cookies 已保存。'; errEl.style.display = 'block'; errEl.style.background = '#dcfce7'; errEl.style.color = '#166534'; }
     }
   }
 }
 
-function renderLegal() {
-  const legal = state.legalState || {};
-  const accepted = legal.accepted;
-  const html =
-    '<div style="margin-bottom:20px"><span class="status-badge ' + (accepted ? 'badge-ok' : 'badge-warn') + '">' + (accepted ? '已接受 v' + legal.version : '未接受') + '</span></div>' +
-    '<div class="legal-text">' + renderMarkdown(state.legalText) + '</div>' +
-    (!accepted ? '<div class="checkbox-row"><input type="checkbox" id="legal-check"><label for="legal-check">我已阅读并接受上述所有条款</label></div><button onclick="acceptLegalFromPage()">接受条款</button>' : '<div style="color:#166534;font-size:14px">✓ 您已接受当前版本条款</div>');
-  document.getElementById('legal-content').innerHTML = html;
-}
-
-async function acceptLegalFromPage() {
-  const check = document.getElementById('legal-check');
-  if (check && !check.checked) { alert('请先勾选接受条款'); return; }
-  const d = await api('/dingtalk/legal', { method: 'POST' });
-  if (d && d.ok) {
-    state.legalState.accepted = true;
-    renderLegal();
-  }
-}
-
-// admin
+// ── Admin ──
 async function loadAdmin() {
   if (!state.user || !state.user.isSudo) return;
-  const html =
-    '<div class="admin-section">' +
-      '<h2>免登录链接</h2>' +
-      '<div id="admin-guest-url"></div>' +
-    '</div>' +
-    '<div class="admin-section">' +
-      '<h2>用户管理</h2>' +
-      '<div id="admin-users"></div>' +
-    '</div>' +
-    '<div class="admin-section">' +
-      '<h2>条款管理</h2>' +
-      '<div id="admin-legal"></div>' +
-    '</div>';
-  document.getElementById('admin-content').innerHTML = html;
+  document.getElementById('admin-content').innerHTML =
+    '<div class="admin-section"><h3>免登录链接</h3><div id="admin-guest-url"></div></div>' +
+    '<div class="admin-section"><h3>用户管理</h3><div id="admin-users"></div></div>' +
+    '<div class="admin-section"><h3>条款管理</h3><div id="admin-legal"></div></div>';
   loadAdminGuestURL();
   loadAdminUsers();
   loadAdminLegal();
 }
 
 async function loadAdminGuestURL() {
-  const d = await api('/dingtalk/admin/settings');
+  var d = await api('/dingtalk/admin/settings');
   if (!d || !d.settings) return;
-  const token = d.settings.guest_token || '';
+  var token = d.settings.guest_token || '';
   if (!token) {
-    document.getElementById('admin-guest-url').innerHTML = '<div style="color:var(--red);font-size:13px">无法加载，请刷新重试</div>';
+    document.getElementById('admin-guest-url').innerHTML = '<div style="color:var(--red);font-size:12px">无法加载</div>';
     return;
   }
-  const url = location.origin + '/dingtalk?token=' + token;
+  var url = location.origin + '/dingtalk?token=' + token;
   document.getElementById('admin-guest-url').innerHTML =
-    '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">持有此链接的人可免登录使用钉钉下载。请勿公开分享。</div>' +
-    '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
-      '<input type="text" value="' + escHtml(url) + '" readonly style="flex:1;min-width:280px;font-size:12px;font-family:monospace" id="guest-url-input" />' +
-      '<button onclick="copyGuestURL()">复制链接</button>' +
-      '<button class="btn-ghost btn-sm" onclick="regenerateToken()" style="white-space:nowrap">重新生成</button>' +
-    '</div>' +
-    '<div id="guest-url-msg" style="margin-top:8px;font-size:12px"></div>';
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">持有此链接的人可免登录使用。请勿公开分享。</div>' +
+    '<div style="display:flex;gap:6px;flex-wrap:wrap"><input type="text" value="' + escHtml(url) + '" readonly style="flex:1;min-width:200px;font-size:11px;font-family:monospace" id="guest-url-input" />' +
+    '<button onclick="copyGuestURL()">复制</button>' +
+    '<button class="btn-ghost btn-sm" onclick="regenerateToken()">重新生成</button></div>' +
+    '<div id="guest-url-msg" style="margin-top:6px;font-size:11px"></div>';
 }
 
 function copyGuestURL() {
-  const input = document.getElementById('guest-url-input');
+  var input = document.getElementById('guest-url-input');
   if (!input) return;
   input.select();
   document.execCommand('copy');
@@ -909,91 +865,43 @@ function copyGuestURL() {
 }
 
 async function regenerateToken() {
-  if (!confirm('确定要重新生成免登录链接吗？旧链接将立即失效。')) return;
-  const d = await api('/dingtalk/admin/regenerate-token', { method: 'POST' });
-  if (d && d.ok && d.token) {
-    loadAdminGuestURL();
-    document.getElementById('guest-url-msg').innerHTML = '<span style="color:#166534">已生成新链接</span>';
-  } else {
-    alert(d?.error || '操作失败');
-  }
+  if (!confirm('确定要重新生成吗？旧链接将立即失效。')) return;
+  var d = await api('/dingtalk/admin/regenerate-token', { method: 'POST' });
+  if (d && d.ok) { loadAdminGuestURL(); document.getElementById('guest-url-msg').innerHTML = '<span style="color:#166534">已生成新链接</span>'; }
+  else { alert((d && d.error) || '操作失败'); }
 }
 
 async function loadAdminUsers() {
-  const d = await api('/dingtalk/admin/users');
+  var d = await api('/dingtalk/admin/users');
   if (!d) return;
-  const users = d.users || [];
-  const html = '<table class="admin-table"><thead><tr><th>用户名</th><th>Sudo</th><th>条款</th><th>Cookie</th><th>密码</th><th>任务</th><th>注册</th></tr></thead><tbody>' +
-    users.map(u => '<tr>' +
-      '<td>' + escHtml(u.username) + '</td>' +
-      '<td>' + (u.is_sudo ? '✓' : '—') + '</td>' +
-      '<td>' + (u.legal_accepted ? '✓' : '—') + '</td>' +
-      '<td>' + (u.cookies_ready ? '<span class="status-badge badge-ok">是</span>' : '<span class="status-badge badge-no">否</span>') + '</td>' +
-      '<td>' + (u.has_zip_password ? '<span class="status-badge badge-ok">是</span>' : '<span class="status-badge badge-no">否</span>') + '</td>' +
-      '<td>' + u.total_jobs + '</td>' +
-      '<td>' + (u.created_at ? new Date(u.created_at).toLocaleString('zh-CN') : '-') + '</td>' +
-    '</tr>').join('') + '</tbody></table>';
-  document.getElementById('admin-users').innerHTML = html || '<div style="color:var(--muted)">暂无数据</div>';
+  var users = d.users || [];
+  document.getElementById('admin-users').innerHTML = users.length
+    ? '<table class="admin-table"><thead><tr><th>用户名</th><th>Sudo</th><th>条款</th><th>Cookie</th><th>密码</th><th>任务</th><th>注册</th></tr></thead><tbody>' +
+      users.map(function(u) { return '<tr><td>' + escHtml(u.username) + '</td><td>' + (u.is_sudo ? '✓' : '—') + '</td><td>' + (u.legal_accepted ? '✓' : '—') + '</td><td>' + (u.cookies_ready ? '<span class="status-badge badge-ok">是</span>' : '<span class="status-badge badge-no">否</span>') + '</td><td>' + (u.has_zip_password ? '<span class="status-badge badge-ok">是</span>' : '<span class="status-badge badge-no">否</span>') + '</td><td>' + u.total_jobs + '</td><td>' + (u.created_at ? new Date(u.created_at).toLocaleString('zh-CN') : '-') + '</td></tr>'; }).join('') +
+      '</tbody></table>'
+    : '<div style="color:var(--muted);font-size:12px">暂无数据</div>';
 }
 
 async function loadAdminLegal() {
-  const d = await api('/dingtalk/admin/legal');
+  var d = await api('/dingtalk/admin/legal');
   if (!d) return;
-  const html =
-    '<div style="margin-bottom:12px;font-size:13px;color:var(--muted)">当前版本: <strong>' + escHtml(d.version || '') + '</strong></div>' +
+  document.getElementById('admin-legal').innerHTML =
+    '<div style="margin-bottom:10px;font-size:12px;color:var(--muted)">当前版本: <strong>' + escHtml(d.version || '') + '</strong></div>' +
     '<textarea id="admin-legal-text" class="admin-textarea" placeholder="输入条款内容...">' + escHtml(d.text || '') + '</textarea>' +
-    '<div style="margin-top:10px"><button onclick="saveAdminLegal()">保存条款</button></div>' +
-    '<div id="admin-legal-msg" style="margin-top:8px"></div>';
-  document.getElementById('admin-legal').innerHTML = html;
+    '<div style="margin-top:8px"><button onclick="saveAdminLegal()">保存条款</button></div>' +
+    '<div id="admin-legal-msg" style="margin-top:8px;font-size:12px"></div>';
 }
 
 async function saveAdminLegal() {
-  const text = document.getElementById('admin-legal-text').value;
-  const msg = document.getElementById('admin-legal-msg');
+  var text = document.getElementById('admin-legal-text').value;
+  var msg = document.getElementById('admin-legal-msg');
   if (!text.trim()) { msg.textContent = '条款内容不能为空'; msg.style.color = '#dc2626'; return; }
-  const d = await api('/dingtalk/admin/legal', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text }) });
-  if (d && d.ok) {
-    msg.textContent = '条款已保存，所有用户需要重新接受';
-    msg.style.color = '#166534';
-  } else {
-    msg.textContent = d.error || '保存失败';
-    msg.style.color = '#dc2626';
-  }
+  var d = await api('/dingtalk/admin/legal', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: text }) });
+  if (d && d.ok) { msg.textContent = '条款已保存'; msg.style.color = '#166534'; }
+  else { msg.textContent = (d && d.error) || '保存失败'; msg.style.color = '#dc2626'; }
 }
 
-function formatBytes(b) {
-  if (b < 1024) return b + ' B';
-  if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
-  if (b < 1024 * 1024 * 1024) return (b / (1024 * 1024)).toFixed(1) + ' MB';
-  return (b / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
-}
-
-function formatSeconds(s) {
-  if (s < 60) return s + ' 秒';
-  var m = Math.floor(s / 60);
-  var sec = s % 60;
-  return m + ' 分 ' + sec + ' 秒';
-}
-
-function updateSidebarBadges() {
-  var s = state.status || {};
-  var leg = state.legalState || {};
-  var setBadge = function(id, done) {
-    var el = document.getElementById(id);
-    if (el) { el.className = 'nav-step-badge ' + (done ? 'ok' : 'no'); el.textContent = done ? '已完成' : '未完成'; }
-  };
-  var setDot = function(id, done) {
-    var el = document.getElementById(id);
-    if (el) { el.className = 'nav-dot' + (done ? ' done' : ''); el.textContent = done ? '✓' : el.getAttribute('data-step') || el.textContent; }
-  };
-  setBadge('badge-legal', leg.accepted);
-  setBadge('badge-qr', s.cookies_ready);
-  setBadge('badge-pw', s.has_zip_password);
-  setDot('step-legal', leg.accepted);
-  setDot('step-qr', s.cookies_ready);
-  setDot('step-pw', s.has_zip_password);
-}
-
+// ── Utilities ──
 function escHtml(s) {
   if (s == null) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -1008,10 +916,10 @@ function renderMarkdown(text) {
     var line = lines[i];
     if (/^##\\s/.test(line)) {
       if (inList) { html += '</ul>'; inList = false; }
-      html += '<h3 style="font-size:15px;font-weight:600;margin:16px 0 8px">' + escHtml(line.replace(/^##\\s+/, '')) + '</h3>';
+      html += '<h3 style="font-size:14px;font-weight:600;margin:12px 0 6px">' + escHtml(line.replace(/^##\\s+/, '')) + '</h3>';
     } else if (/^-\\s/.test(line)) {
-      if (!inList) { html += '<ul style="padding-left:20px;margin:4px 0">'; inList = true; }
-      html += '<li style="margin-bottom:4px">' + escHtml(line.replace(/^-\\s+/, '')) + '</li>';
+      if (!inList) { html += '<ul style="padding-left:18px;margin:4px 0">'; inList = true; }
+      html += '<li style="margin-bottom:3px">' + escHtml(line.replace(/^-\\s+/, '')) + '</li>';
     } else if (/^\\s*$/.test(line)) {
       if (inList) { html += '</ul>'; inList = false; }
     } else {
@@ -1023,6 +931,11 @@ function renderMarkdown(text) {
   return html;
 }
 
+function formatSeconds(s) {
+  if (s < 60) return s + '秒';
+  return Math.floor(s / 60) + '分' + (s % 60) + '秒';
+}
+
 function toast(msg, type) {
   type = type || 'info';
   var container = document.getElementById('toast-container');
@@ -1030,7 +943,7 @@ function toast(msg, type) {
   el.className = 'toast ' + type;
   el.textContent = msg;
   container.appendChild(el);
-  setTimeout(function() { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(function() { el.remove(); }, 300); }, 3000);
+  setTimeout(function() { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(function() { el.remove(); }, 300); }, 2500);
 }
 
 function getQRImageSrc(session) {
@@ -1040,25 +953,21 @@ function getQRImageSrc(session) {
 
 function startPolling() {
   if (pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(async () => {
+  pollTimer = setInterval(async function() {
     await loadStatus();
-    const s = state.status;
-    if (!s) return;
-    if (document.getElementById('page-overview').classList.contains('active')) {
+    if (document.getElementById('tab-dashboard').classList.contains('active')) {
       renderMetrics();
       renderStatus();
       loadRecentJobs();
     }
-    // Refresh jobs list if on jobs page
-    if (document.getElementById('page-jobs').classList.contains('active')) {
+    if (document.getElementById('tab-jobs').classList.contains('active')) {
       loadJobs(state.currentPage);
     }
-    // Auto-refresh expanded job details
     var expanded = document.querySelector('.job-item.expanded');
     if (expanded) {
       var jobId = expanded.getAttribute('data-job-id');
       if (jobId) {
-        var d = await api('/dingtalk/jobs/' + jobId + '?include=events');
+        var d = await api('/dingtalk/jobs/' + jobId + '?include=events' + (DT_TOKEN ? '&dt_token=' + DT_TOKEN : ''));
         if (d && d.job && (d.job.status === 'running' || d.job.status === 'queued')) {
           d.job._events = d.events || [];
           var newEl = document.createElement('div');
@@ -1067,68 +976,15 @@ function startPolling() {
         }
       }
     }
-    if (document.getElementById('page-qr').classList.contains('active') && state.loginSession) {
+    if (document.getElementById('tab-settings').classList.contains('active') && state.loginSession) {
       if (state.loginSession.status !== 'completed') await checkLoginStatus();
     }
   }, 2000);
 }
 
-// Hash-based routing
-function handleHashChange() {
-  var hash = location.hash.replace(/^#/, '') || 'overview';
-  var validPages = ['overview', 'legal', 'qr', 'password', 'jobs', 'admin'];
-  if (validPages.indexOf(hash) < 0) hash = 'overview';
-  // Only navigate if user is authenticated (state.user exists) and gates are passed
-  if (state.user && state.status) {
-    var s = state.status;
-    var allGates = s.legal_accepted && s.cookies_ready && s.has_zip_password;
-    if (hash === 'overview' || hash === 'jobs') {
-      if (allGates) navigate(hash);
-    } else {
-      navigate(hash);
-    }
-  }
-}
-window.addEventListener('hashchange', handleHashChange);
-window.addEventListener('popstate', function() {
-  var hash = location.hash.replace(/^#/, '') || 'overview';
-  navigate(hash);
-});
-
-checkAuth();
-
-// Auto-recovery on network restore
 window.addEventListener('online', function() { location.reload(); });
 
-// Service Worker update detection
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').then(function(reg) {
-    navigator.serviceWorker.addEventListener('message', function(e) {
-      if (e.data.type === 'update') {
-        var bar = document.createElement('div');
-        bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:var(--blue,#2563eb);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,.1);transform:translateY(-100%);transition:transform .3s';
-        bar.innerHTML = '<span style="flex:1;font-weight:500">有新版本可用</span><button style="margin-left:auto;background:#fff;color:var(--blue,#2563eb);border:none;border-radius:8px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer">刷新</button>';
-        bar.querySelector('button').onclick = function() { location.reload(); };
-        document.body.appendChild(bar);
-        requestAnimationFrame(function() { bar.style.transform = 'translateY(0)'; });
-      }
-      if (e.data.type === 'reload') location.reload();
-    });
-    reg.addEventListener('updatefound', function() {
-      var newWorker = reg.installing;
-      newWorker && newWorker.addEventListener('statechange', function() {
-        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-          var bar = document.createElement('div');
-          bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:var(--blue,#2563eb);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,.1);transform:translateY(-100%);transition:transform .3s';
-          bar.innerHTML = '<span style="flex:1;font-weight:500">新版本已就绪</span><button style="margin-left:auto;background:#fff;color:var(--blue,#2563eb);border:none;border-radius:8px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer">刷新</button>';
-          bar.querySelector('button').onclick = function() { newWorker.postMessage('skipWaiting'); location.reload(); };
-          document.body.appendChild(bar);
-          requestAnimationFrame(function() { bar.style.transform = 'translateY(0)'; });
-        }
-      });
-    });
-  });
-}
+checkAuth();
 </script>
 </body>
 </html>`;

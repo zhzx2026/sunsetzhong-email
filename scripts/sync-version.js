@@ -17,10 +17,4 @@ let idx = readFileSync(resolve(root, "src/index.ts"), "utf8");
 idx = idx.replace(/version: "[^"]*"/, `version: "${version}"`);
 writeFileSync(resolve(root, "src/index.ts"), idx);
 
-// build.gradle
-let gradle = readFileSync(resolve(root, "apk/EmailApp/app/build.gradle.kts"), "utf8");
-gradle = gradle.replace(/versionCode = \d+/, `versionCode = ${versionCode}`);
-gradle = gradle.replace(/versionName = "[^"]*"/, `versionName = "${version}"`);
-writeFileSync(resolve(root, "apk/EmailApp/app/build.gradle.kts"), gradle);
-
-console.log(`Synced version ${version} (versionCode: ${versionCode})`);
+console.log(`Synced version ${version}`);
