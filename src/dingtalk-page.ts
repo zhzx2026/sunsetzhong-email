@@ -15,7 +15,6 @@ export const DINGTALK_PAGE = `<!doctype html>
   --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
   --shadow-md:0 4px 12px rgba(0,0,0,.08);
   --shadow-lg:0 12px 40px rgba(0,0,0,.12);
-  --sidebar-w:220px;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){
@@ -41,41 +40,32 @@ a{color:var(--blue);text-decoration:none}
 ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
 @media (prefers-color-scheme:dark){::-webkit-scrollbar-thumb{background:#475569}}
 
+/* main content — same on mobile & desktop */
+#main{flex:1;padding:16px 16px 80px;max-width:720px;margin:0 auto;width:100%}
+.guest-badge{display:inline-block;font-size:11px;background:var(--blue);color:#fff;padding:3px 10px;border-radius:10px;font-weight:500;letter-spacing:.2px;vertical-align:middle;margin-left:8px}
+
 /* sidebar — desktop only */
 #sidebar{display:none}
-#topbar{display:none}
 @media (min-width:768px){
   body{display:flex}
-  #topbar{display:none}
-  #sidebar{display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--panel);border-right:1px solid var(--line);z-index:100;overflow-y:auto;padding:0}
-  .sidebar-brand{padding:20px 18px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
-  .sidebar-brand-icon{width:34px;height:34px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;font-weight:700;flex-shrink:0}
+  #sidebar{display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;width:200px;background:var(--panel);border-right:1px solid var(--line);z-index:100;padding:0}
+  .sidebar-brand{padding:18px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+  .sidebar-brand-icon{width:32px;height:32px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;flex-shrink:0}
   .sidebar-brand-text{font-size:14px;font-weight:600}
-  .sidebar-nav{flex:1;padding:8px 0;overflow-y:auto}
-  .sidebar-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:16px 18px 6px}
-  .sidebar-item{padding:9px 18px;cursor:pointer;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:10px;border-left:3px solid transparent;transition:all .15s ease;margin:0 0 1px}
-  .sidebar-item svg{width:18px;height:18px;opacity:.6;flex-shrink:0;transition:opacity .15s}
+  .sidebar-nav{padding:8px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+  .sidebar-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;color:var(--muted);transition:all .12s ease;font-weight:450}
+  .sidebar-item svg{width:18px;height:18px;opacity:.55;flex-shrink:0;transition:opacity .12s}
   .sidebar-item:hover{color:var(--text);background:var(--hover)}
-  .sidebar-item.active{color:var(--blue);background:var(--blue-lt);border-left-color:var(--blue);font-weight:500}
+  .sidebar-item.active{color:var(--blue);background:var(--blue-lt);font-weight:550}
   .sidebar-item.active svg{opacity:1}
-  .sidebar-footer{padding:16px 18px;border-top:1px solid var(--line);margin-top:auto}
-  .sidebar-footer a{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;transition:color .15s}
+  .sidebar-footer{padding:12px 16px;border-top:1px solid var(--line)}
+  .sidebar-footer a{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;transition:color .12s;text-decoration:none}
   .sidebar-footer a:hover{color:var(--text)}
-  #main{margin-left:var(--sidebar-w);padding:28px 36px 40px;max-width:calc(960px + var(--sidebar-w))}
+  #main{margin-left:200px;padding:32px 36px 40px;max-width:calc(720px + 200px)}
   #bottom-nav{display:none}
   .metrics{grid-template-columns:repeat(4,1fr)}
   .status-grid{grid-template-columns:repeat(3,1fr)}
 }
-
-/* top bar — mobile only */
-#topbar{position:sticky;top:0;z-index:100;background:var(--panel);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;gap:10px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);background:rgba(255,255,255,.85)}
-@media (prefers-color-scheme:dark){#topbar{background:rgba(30,41,59,.9)}}
-#topbar-title{font-size:15px;font-weight:600;flex:1}
-#guest-badge{font-size:10px;background:var(--blue);color:#fff;padding:3px 8px;border-radius:10px;font-weight:500;display:none;letter-spacing:.2px}
-@media (min-width:768px){#topbar{display:none}}
-
-/* main content */
-#main{flex:1;padding:12px 16px 80px;overflow-y:auto;max-width:640px;margin:0 auto}
 .tab{display:none;animation:fadeIn .25s ease}
 .tab.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -125,7 +115,7 @@ button:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .btn-block{width:100%}
 
 /* bottom nav — mobile only */
-#bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--panel);border-top:1px solid var(--line);display:flex;padding:4px 0 env(safe-area-inset-bottom,4px) 0;box-shadow:0 -1px 8px rgba(0,0,0,.06);max-width:640px;margin:0 auto}
+#bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--panel);border-top:1px solid var(--line);display:flex;padding:4px 0 env(safe-area-inset-bottom,4px) 0;box-shadow:0 -1px 8px rgba(0,0,0,.06)}
 @media (min-width:768px){#bottom-nav{display:none}}
 .nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 4px;cursor:pointer;border:none;background:none;color:var(--muted);font-size:10px;font-weight:500;transition:color .15s;-webkit-tap-highlight-color:transparent;position:relative}
 .nav-tab::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:0;height:2px;background:var(--blue);border-radius:0 0 2px 2px;transition:width .2s}
@@ -152,10 +142,13 @@ button:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .job-meta{display:flex;gap:14px;font-size:11px;color:var(--muted);flex-wrap:wrap}
 .job-detail{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);animation:fadeIn .2s ease}
 .job-item.expanded .job-detail{display:block}
-.job-progress-bar{height:4px;background:var(--line);border-radius:2px;margin:6px 0;overflow:hidden}
-.job-progress-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .4s ease}
-.job-events{margin-top:8px;max-height:160px;overflow-y:auto;font-size:10px;font-family:"SF Mono","JetBrains Mono",monospace;background:var(--tag);border-radius:8px;padding:8px}
-.job-event{padding:2px 0;color:var(--muted)}
+.job-progress-bar{height:5px;background:var(--line);border-radius:3px;margin:8px 0;overflow:hidden}
+.job-progress-fill{height:100%;background:var(--blue);border-radius:3px;transition:width .6s ease}
+.job-progress-fill.progress-queued{background:var(--amber);animation:pulse 2s ease-in-out infinite}
+.job-progress-fill.progress-done{background:var(--green)}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+.job-events{margin-top:8px;max-height:200px;overflow-y:auto;font-size:11px;background:var(--tag);border-radius:8px;padding:10px}
+.job-event{display:flex;align-items:center;gap:6px;padding:3px 0;color:var(--muted)}
 .job-event.error{color:var(--red)}
 .job-event.success{color:var(--green)}
 .files-list{margin-top:8px}
@@ -177,10 +170,11 @@ button:disabled{opacity:.5;cursor:not-allowed;transform:none}
 
 /* qr */
 .qr-box{display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px}
-.qr-image{width:200px;height:200px;border:2px dashed var(--line);border-radius:16px;background:var(--tag);display:flex;align-items:center;justify-content:center;overflow:hidden;transition:border-color .2s}
-.qr-image.has-code{border-style:solid;border-color:var(--line)}
-.qr-image img{max-width:180px;max-height:180px;display:block}
+.qr-image{width:200px;height:200px;border:2px dashed var(--line);border-radius:16px;background:var(--tag);display:flex;align-items:center;justify-content:center;overflow:hidden;transition:all .3s ease}
+.qr-image.has-code{border-style:solid;border-color:var(--blue)}
+.qr-image img{width:100%;height:100%;object-fit:contain;display:block;padding:8px}
 .qr-spinner{width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
+.info-spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--green);border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:4px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .qr-status{font-size:12px;color:var(--muted);text-align:center;min-height:18px}
 
@@ -227,12 +221,6 @@ button:disabled{opacity:.5;cursor:not-allowed;transform:none}
 </head>
 <body>
 
-<!-- top bar (mobile only) -->
-<div id="topbar">
-  <span id="topbar-title">钉钉视频下载</span>
-  <span id="guest-badge">免登录</span>
-</div>
-
 <!-- desktop sidebar -->
 <div id="sidebar">
   <div class="sidebar-brand">
@@ -240,14 +228,12 @@ button:disabled{opacity:.5;cursor:not-allowed;transform:none}
     <div class="sidebar-brand-text">视频下载</div>
   </div>
   <div class="sidebar-nav">
-    <div class="sidebar-label">主菜单</div>
     <div class="sidebar-item active" data-page="dashboard" onclick="switchTab('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> 仪表盘</div>
     <div class="sidebar-item" data-page="jobs" onclick="switchTab('jobs')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg> 任务列表</div>
-    <div class="sidebar-label">设置</div>
     <div class="sidebar-item" data-page="settings" id="sidebar-settings" onclick="switchTab('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> 设置</div>
     <div class="sidebar-item admin-only" data-page="admin" onclick="switchTab('admin')" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2zm10-10V7a4 4 0 0 0-8 0v4h8z"/></svg> 管理页</div>
   </div>
-  <div class="sidebar-footer"><a href="/">← 返回邮箱</a></div>
+  <div class="sidebar-footer"><a href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> 返回邮箱</a></div>
 </div>
 
 <!-- main content -->
@@ -255,6 +241,7 @@ button:disabled{opacity:.5;cursor:not-allowed;transform:none}
 
   <!-- Tab: Dashboard -->
   <div id="tab-dashboard" class="tab active">
+    <h2>钉钉视频下载 <span class="guest-badge" id="guest-badge" style="display:none">免登录</span></h2>
     <div class="metrics" id="metrics"></div>
 
     <div class="card">
@@ -264,7 +251,8 @@ button:disabled{opacity:.5;cursor:not-allowed;transform:none}
 
     <div class="card">
       <h3>提交下载任务</h3>
-      <input type="text" id="url-input" placeholder="输入视频页面 URL" style="margin-bottom:8px" />
+      <textarea id="url-input" placeholder="输入视频页面 URL，每行一个，支持批量" rows="3" style="margin-bottom:8px;resize:vertical;min-height:60px"></textarea>
+      <div id="url-count" style="font-size:11px;color:var(--muted);margin-bottom:6px;display:none"></div>
       <input type="number" id="thread-input" placeholder="线程数（默认100）" />
       <button onclick="submitJob()" class="btn-block" style="margin-top:8px">提交任务</button>
       <div id="submit-error" class="error-msg" style="display:none;margin-top:8px"></div>
@@ -299,9 +287,8 @@ button:disabled{opacity:.5;cursor:not-allowed;transform:none}
       <div id="qr-login-box" class="qr-box">
         <div class="qr-image" id="qr-image"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;opacity:.3;margin-bottom:8px"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg><div style="font-size:11px">点击下方按钮获取二维码</div></div></div>
         <div class="qr-status" id="qr-status"></div>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px" id="qr-buttons">
           <button id="btn-start-qr" onclick="startQRLogin()">获取二维码</button>
-          <button class="btn-ghost btn-sm" onclick="checkLoginStatus()">刷新状态</button>
         </div>
         <div style="font-size:10px;color:var(--muted);text-align:center">有效期5分钟，请用钉钉 App 扫码</div>
       </div>
@@ -319,6 +306,7 @@ button:disabled{opacity:.5;cursor:not-allowed;transform:none}
       <div id="pw-msg" style="margin-top:8px;font-size:12px"></div>
       <div style="margin-top:8px;font-size:12px;color:var(--muted)">密码状态: <span id="pw-state">—</span></div>
     </div>
+    <div style="text-align:center;margin-top:16px"><a href="/" style="font-size:13px;color:var(--muted)">← 返回邮箱</a></div>
   </div>
 
   <!-- Tab: Admin -->
@@ -373,7 +361,7 @@ const DT_TOKEN = window.__DT_TOKEN || '';
 const isGuest = !!DT_TOKEN;
 
 if (isGuest) {
-  document.getElementById('guest-badge').style.display = 'inline';
+  document.getElementById('guest-badge').style.display = 'inline-block';
 }
 
 async function api(path, opts) {
@@ -427,6 +415,7 @@ async function loadLegal() {
 function checkGates() {
   var s = state.status;
   if (!s) return;
+  console.log('[Gate] checkGates legal:', s.legal_accepted, 'cookies:', s.cookies_ready, 'password:', s.has_zip_password);
   if (!s.legal_accepted) { showGate('legal'); return; }
   if (!s.cookies_ready) { showGate('qr'); return; }
   if (!s.has_zip_password) { showGate('password'); return; }
@@ -460,8 +449,8 @@ function showGate(type) {
     btn.onclick = acceptLegal;
   } else if (type === 'qr') {
     title.textContent = '请完成钉钉验证';
-    desc.textContent = '需要获取有效 Cookies 才能下载';
-    body.innerHTML = '<div style="text-align:center;padding:20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="width:48px;height:48px;opacity:.4;margin-bottom:12px"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg><div style="font-size:14px;margin-bottom:16px">您尚未完成钉钉验证</div></div>';
+    desc.textContent = '扫码登录钉钉后自动保存 Cookies';
+    body.innerHTML = '<div style="text-align:center;padding:20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="width:48px;height:48px;opacity:.4;margin-bottom:12px"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg><div style="font-size:14px;margin-bottom:16px">需要钉钉扫码获取有效 Cookies 才能下载视频</div></div>';
     btn.style.display = 'inline-flex';
     btn.textContent = '前往设置';
     btn.onclick = function() { closeGate(); switchTab('settings'); };
@@ -552,20 +541,55 @@ async function loadRecentJobs() {
     : '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;opacity:.3;margin-bottom:8px"><path d="M22 12h-6l-2 3H10l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg><div>暂无任务记录</div></div>';
 }
 
+function stageLabel(stage) {
+  var map = {
+    waiting_runner: '等待下载器启动',
+    preparing: '正在准备',
+    downloading: '正在下载视频',
+    merging: '正在合并视频',
+    encrypting: '正在加密打包',
+    uploading: '正在上传结果',
+    completed: '已完成',
+    failed: '已失败',
+    cancelled: '已取消',
+  };
+  return map[stage] || (stage || '等待中');
+}
+
+function elapsedTime(createdAt, finishedAt) {
+  var start = new Date(createdAt).getTime();
+  var end = finishedAt ? new Date(finishedAt).getTime() : Date.now();
+  var sec = Math.floor((end - start) / 1000);
+  if (sec < 60) return sec + '秒';
+  if (sec < 3600) return Math.floor(sec / 60) + '分' + (sec % 60) + '秒';
+  return Math.floor(sec / 3600) + '时' + Math.floor((sec % 3600) / 60) + '分';
+}
+
 function jobRowHTML(job, expanded) {
-  var statusMap = { queued: ['badge-warn','排队'], running: ['badge-info','执行中'], succeeded: ['badge-ok','完成'], failed: ['badge-no','失败'] };
+  var statusMap = { queued: ['badge-warn','排队中'], running: ['badge-info','执行中'], succeeded: ['badge-ok','已完成'], failed: ['badge-no','失败'] };
   var st = statusMap[job.status] || ['badge-warn','未知'];
   var pct = job.progress_percent || 0;
   var errors = (job.errors || []).slice(0, 3);
   var files = (job.files || []).slice(0, 5);
   var dt = new Date(job.created_at).toLocaleString('zh-CN');
   var retention = (state.status && state.status.artifact_retention_days) || 90;
+  var isActive = job.status === 'running' || job.status === 'queued';
 
   var eventsHtml = '';
   if (expanded && job._events) {
     eventsHtml = '<div class="job-events">' + job._events.map(function(e) {
-      return '<div class="job-event ' + (e.level === 'error' ? 'error' : e.level === 'success' ? 'success' : '') + '">[' + (e.created_at||'').slice(0,19) + '] ' + escHtml(e.message) + '</div>';
+      var icon = e.level === 'error' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>'
+        : e.level === 'success' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';
+      return '<div class="job-event ' + (e.level === 'error' ? 'error' : e.level === 'success' ? 'success' : '') + '">' + icon + '<span>' + escHtml(e.message) + '</span><span style="font-size:10px;color:var(--muted);flex-shrink:0">' + (e.created_at||'').slice(11,19) + '</span></div>';
     }).join('') + '</div>';
+  }
+
+  // Show latest event as status line for active jobs
+  var latestEvent = '';
+  if (isActive && job._events && job._events.length) {
+    var latest = job._events[job._events.length - 1];
+    latestEvent = '<div style="font-size:11px;color:var(--muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(latest.message) + '</div>';
   }
 
   var filesHtml = '';
@@ -582,21 +606,36 @@ function jobRowHTML(job, expanded) {
   }
 
   var cancelBtn = '';
-  if (job.status === 'queued' || job.status === 'running') {
+  if (isActive) {
     cancelBtn = '<button class="btn-ghost btn-sm" style="color:var(--red);border-color:var(--red);margin-top:6px" onclick="event.stopPropagation();cancelJob(\\'' + job.id + '\\')">取消</button>';
   }
 
   var deleteBtn = '<button class="btn-ghost btn-sm" style="margin-top:6px;margin-left:4px" onclick="event.stopPropagation();deleteJob(\\'' + job.id + '\\')">删除</button>';
 
+  var progressBar = '';
+  if (isActive) {
+    var barPct = Math.max(pct, 2);
+    var barCls = job.status === 'queued' ? 'progress-queued' : '';
+    progressBar = '<div class="job-progress-bar"><div class="job-progress-fill ' + barCls + '" style="width:' + barPct + '%"></div></div>' +
+      '<div style="font-size:10px;color:var(--muted);margin-top:2px;display:flex;justify-content:space-between">' +
+        '<span>' + stageLabel(job.stage) + (job.current_title ? ' — ' + escHtml(job.current_title) : '') + '</span>' +
+        '<span>' + elapsedTime(job.created_at) + ' / ' + (pct || 0) + '%</span>' +
+      '</div>';
+  } else if (job.status === 'succeeded') {
+    progressBar = '<div class="job-progress-bar"><div class="job-progress-fill progress-done" style="width:100%"></div></div>' +
+      '<div style="font-size:10px;color:var(--muted);margin-top:2px;display:flex;justify-content:space-between"><span>耗时 ' + elapsedTime(job.created_at, job.finished_at) + '</span><span>100%</span></div>';
+  }
+
   return '<div class="job-item' + (expanded ? ' expanded' : '') + '" data-job-id="' + job.id + '" onclick="toggleJob(this,\\'' + job.id + '\\')">' +
     '<div class="job-header">' +
-      '<span class="job-id">' + job.id.slice(0,16) + '</span>' +
+      '<span class="job-id">' + job.id.slice(0,12) + '</span>' +
       '<span class="job-title">' + escHtml(job.current_title || (job.urls && job.urls[0]) || '-') + '</span>' +
       '<span class="job-status ' + st[0] + '">' + st[1] + '</span>' +
     '</div>' +
-    '<div class="job-meta"><span>' + dt + '</span><span>线程:' + job.thread + '</span><span>' + job.completed_parts + '/' + job.total_parts + '</span></div>' +
+    '<div class="job-meta"><span>' + dt + '</span><span>' + (isActive ? stageLabel(job.stage) : (job.status === 'succeeded' ? '耗时 ' + elapsedTime(job.created_at, job.finished_at) : '')) + '</span></div>' +
+    progressBar +
     downloadBtn + cancelBtn + deleteBtn +
-    ((job.status === 'running' || job.status === 'queued') ? '<div class="job-progress-bar"><div class="job-progress-fill" style="width:' + (pct || 3) + '%"></div></div><div style="font-size:10px;color:var(--muted);margin-top:2px">' + escHtml(job.stage || '等待中') + ' — ' + (pct || 0) + '%</div>' : '') +
+    latestEvent +
     (errors.length ? '<div style="font-size:11px;color:#dc2626;margin-top:4px">' + errors.join('; ') + '</div>' : '') +
     '<div class="job-detail">' + filesHtml + eventsHtml + '</div>' +
   '</div>';
@@ -643,37 +682,65 @@ async function submitJob() {
   var threadInput = document.getElementById('thread-input');
   var errEl = document.getElementById('submit-error');
   var infoEl = document.getElementById('submit-info');
+  var btn = document.querySelector('#tab-dashboard button.btn-block');
   errEl.style.display = 'none';
   infoEl.style.display = 'none';
 
-  var url = urlInput.value.trim();
-  if (!url) { errEl.textContent = '请输入 URL'; errEl.style.display = 'block'; return; }
+  var lines = urlInput.value.trim().split(/[\\n\\r]+/).map(function(l) { return l.trim(); }).filter(Boolean);
+  if (lines.length === 0) { errEl.textContent = '请输入至少一个视频页面 URL'; errEl.style.display = 'block'; return; }
 
   var thread = parseInt(threadInput.value) || (state.status && state.status.default_thread) || 100;
 
-  infoEl.textContent = '正在提交...';
+  btn.disabled = true;
+  btn.textContent = '提交中...';
+  var plural = lines.length > 1 ? '（' + lines.length + ' 个）' : '';
+  infoEl.innerHTML = '<span class="info-spinner"></span> 正在提交' + plural + '...';
   infoEl.style.display = 'block';
 
+  var body = lines.length === 1 ? { url: lines[0], thread: thread, create_video_list: true }
+    : { urls: lines, thread: thread, create_video_list: true };
   var d = await api('/dingtalk/jobs', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ url: url, thread: thread, create_video_list: true })
+    body: JSON.stringify(body)
   });
 
-  if (!d) return;
+  btn.disabled = false;
+  btn.textContent = '提交任务';
+
+  if (!d) {
+    errEl.textContent = '网络错误，请重试';
+    errEl.style.display = 'block';
+    infoEl.style.display = 'none';
+    return;
+  }
   if (d.error) {
     errEl.textContent = d.error;
     errEl.style.display = 'block';
     infoEl.style.display = 'none';
   } else {
-    infoEl.textContent = '任务已提交！';
+    infoEl.textContent = '任务 ' + (d.job ? d.job.id.slice(0,12) : '') + ' 已提交，' + lines.length + ' 个 URL 等待下载器启动...';
     urlInput.value = '';
+    document.getElementById('url-count').style.display = 'none';
     threadInput.value = '';
     loadStatus();
     showOverview();
-    setTimeout(function() { infoEl.style.display = 'none'; }, 3000);
+    setTimeout(function() { infoEl.style.display = 'none'; }, 5000);
   }
 }
+
+// Show URL count on input
+(function() {
+  var urlInput = document.getElementById('url-input');
+  if (urlInput) {
+    urlInput.addEventListener('input', function() {
+      var count = this.value.trim().split(/[\\n\\r]+/).filter(function(l) { return l.trim(); }).length;
+      var el = document.getElementById('url-count');
+      if (count > 1) { el.textContent = '已输入 ' + count + ' 个 URL'; el.style.display = 'block'; }
+      else { el.style.display = 'none'; }
+    });
+  }
+})();
 
 async function cancelJob(jobId) {
   if (!confirm('确定要取消此任务吗？')) return;
@@ -693,7 +760,21 @@ async function deleteJob(jobId) {
 function renderSettings() {
   renderLegal();
   renderPasswordState();
-  if (!state.loginSession) checkLoginStatus();
+  if (state.status && state.status.cookies_ready) {
+    state.loginSession = null;
+    state.qrReadyAt = null;
+    document.getElementById('qr-image').className = 'qr-image';
+    document.getElementById('qr-image').innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;opacity:.3;margin-bottom:8px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg><div style="font-size:12px;color:#166534">Cookies 已就绪</div></div>';
+    document.getElementById('qr-status').innerHTML = '<span class="status-badge badge-ok">已通过钉钉验证</span>';
+    var btn = document.getElementById('btn-start-qr');
+    if (btn) btn.style.display = 'none';
+    return;
+  }
+  if (!state.loginSession || state.loginSession.status === 'completed' || state.loginSession.status === 'failed') {
+    startQRLogin();
+  } else {
+    checkLoginStatus();
+  }
 }
 
 function renderLegal() {
@@ -743,18 +824,31 @@ async function savePassword() {
 
 // ── QR Login ──
 async function startQRLogin() {
+  console.log('[QR] startQRLogin called, session:', state.loginSession && state.loginSession.status);
+  if (state.loginSession) {
+    var s = state.loginSession;
+    if (s.status === 'pending' || s.status === 'qr_ready') {
+      console.log('[QR] startQRLogin skipped — active session:', s.status);
+      return;
+    }
+  }
+  state.qrStartedAt = Date.now();
+  state.qrReadyAt = null;
   var errEl = document.getElementById('qr-error');
   errEl.style.display = 'none';
   var btn = document.getElementById('btn-start-qr');
   btn.disabled = true;
-  document.getElementById('qr-status').textContent = '正在启动...';
+  btn.style.display = 'none';
+  document.getElementById('qr-status').innerHTML = '<span class="qr-spinner" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:6px"></span>正在启动...';
 
   var d = await api('/dingtalk/login-workflow', { method: 'POST' });
-  btn.disabled = false;
-  if (!d) return;
-  if (d.error) { errEl.textContent = d.error; errEl.style.display = 'block'; return; }
+  if (!d) { console.log('[QR] startQRLogin API returned null'); btn.disabled = false; btn.style.display = ''; return; }
+  if (d.error) { console.log('[QR] startQRLogin error:', d.error); errEl.textContent = d.error; errEl.style.display = 'block'; btn.disabled = false; btn.style.display = ''; return; }
 
+  console.log('[QR] session created, status:', d.login_session && d.login_session.status);
   state.loginSession = d.login_session;
+  btn.disabled = false;
+  btn.style.display = 'none';
   if (d.login_session) {
     var qrSrc = getQRImageSrc(d.login_session);
     if (qrSrc) {
@@ -778,52 +872,100 @@ async function checkLoginStatus() {
   if (errEl) errEl.style.display = 'none';
 
   var d = await api('/dingtalk/login-workflow');
-  if (!d) return;
+  if (!d) { console.log('[QR] checkLoginStatus API returned null'); return; }
   state.loginSession = d.login_session;
 
   if (!d.login_session) {
+    console.log('[QR] no session, restarting...');
     document.getElementById('qr-image').innerHTML = '<div class="qr-spinner"></div>';
-    document.getElementById('qr-status').textContent = '暂无登录会话';
+    document.getElementById('qr-status').textContent = '正在重新启动...';
+    var btn = document.getElementById('btn-start-qr');
+    if (btn) btn.style.display = 'none';
+    setTimeout(function() { startQRLogin(); }, 2000);
     return;
   }
 
   var s = d.login_session;
+  console.log('[QR] status:', s.status, 'qrReadyAt:', state.qrReadyAt);
   var qrSrc = getQRImageSrc(s);
   if (qrSrc) {
     document.getElementById('qr-image').className = 'qr-image has-code';
     document.getElementById('qr-image').innerHTML = '<img src="' + qrSrc + '" alt="QR Code" />';
   } else if (s.qr_url) {
-    document.getElementById('qr-image').innerHTML = '<div style="padding:30px;color:var(--muted);font-size:12px">二维码已生成</div>';
+    document.getElementById('qr-image').innerHTML = '<div class="qr-spinner"></div>';
+  }
+
+  if (s.status === 'qr_ready' && !state.qrReadyAt) {
+    state.qrReadyAt = Date.now();
+    console.log('[QR] qr_ready at:', state.qrReadyAt);
   }
 
   var statusMap = {
-    pending: ['等待启动（约30秒）', 'badge-warn'],
-    qr_ready: ['请扫码（5分钟有效）', 'badge-info'],
+    pending: ['等待远程生成', 'badge-warn'],
+    qr_ready: ['请用钉钉扫码', 'badge-info'],
     completed: ['登录成功', 'badge-ok'],
     failed: ['登录失败', 'badge-no'],
   };
   var stInfo = statusMap[s.status] || ['未知: ' + s.status, 'badge-warn'];
   var statusHtml = '<span class="status-badge ' + stInfo[1] + '">' + stInfo[0] + '</span>';
-  if (s.status === 'failed' && s.error_message) {
-    statusHtml += '<div style="font-size:10px;color:var(--muted);margin-top:4px">' + escHtml(s.error_message) + '</div>';
+
+  if (s.status === 'pending') {
+    var waited = Math.floor((Date.now() - (state.qrStartedAt || Date.now())) / 1000);
+    statusHtml += '<div style="font-size:10px;color:var(--muted);margin-top:4px">已等待 ' + waited + ' 秒，约需 10-30 秒</div>';
   }
-  if (s.status === 'qr_ready' && s.created_at) {
-    var elapsed = Math.floor((Date.now() - new Date(s.created_at).getTime()) / 1000);
-    var remaining = Math.max(0, 300 - elapsed);
-    statusHtml += '<div style="font-size:10px;color:var(--muted);margin-top:4px">剩余: ' + formatSeconds(remaining) + '</div>';
+
+  if (s.status === 'failed') {
+    console.log('[QR] login failed:', s.error_message);
+    if (s.error_message) statusHtml += '<div style="font-size:10px;color:var(--muted);margin-top:4px">' + escHtml(s.error_message) + '</div>';
+    statusHtml += '<div style="margin-top:6px;color:var(--amber);font-size:12px">正在自动重试...</div>';
+    state.qrReadyAt = null;
+    setTimeout(function() { startQRLogin(); }, 2000);
+  }
+
+  if (s.status === 'qr_ready') {
+    var qrAge = Math.floor((Date.now() - (state.qrReadyAt || Date.now())) / 1000);
+    var remaining = Math.max(0, 300 - qrAge);
+    var remainText = remaining > 60 ? Math.floor(remaining / 60) + '分' + (remaining % 60) + '秒' : remaining + '秒';
+    statusHtml += '<div style="font-size:10px;color:var(--muted);margin-top:4px">剩余: ' + remainText + '</div>';
     if (remaining <= 0) {
-      statusHtml += '<div style="margin-top:6px;color:var(--amber);font-size:12px">二维码已过期</div>';
-      statusHtml += '<button class="btn-ghost btn-sm" style="margin-top:4px" onclick="startQRLogin()">重新获取</button>';
+      console.log('[QR] code expired');
+      statusHtml += '<div style="margin-top:8px;color:var(--red);font-size:12px">二维码已过期</div>';
+      statusHtml += '<button class="btn-ghost btn-sm" style="margin-top:4px" onclick="event.stopPropagation();startQRLogin()">重新获取</button>';
+      state.qrReadyAt = null;
+    } else if (remaining < 60) {
+      statusHtml += '<div style="margin-top:4px;font-size:10px;color:var(--amber)">即将过期，请尽快扫码</div>';
     }
   }
+
   document.getElementById('qr-status').innerHTML = statusHtml;
 
-  if (s.status === 'completed') {
-    await loadStatus();
-    if (state.status && state.status.cookies_ready) {
-      closeGate();
-      if (errEl) { errEl.textContent = '登录成功！Cookies 已保存。'; errEl.style.display = 'block'; errEl.style.background = '#dcfce7'; errEl.style.color = '#166534'; }
+  // Button visibility based on state
+  var btn = document.getElementById('btn-start-qr');
+  if (btn) {
+    if (s.status === 'pending' || s.status === 'qr_ready') {
+      btn.style.display = 'none';
+    } else {
+      btn.style.display = '';
+      btn.disabled = false;
     }
+  }
+
+  if (s.status === 'completed') {
+    console.log('[QR] login completed, cleaning up');
+    state.loginSession = null;
+    state.qrReadyAt = null;
+    var wasReady = state.status && state.status.cookies_ready;
+    await loadStatus();
+    var nowReady = state.status && state.status.cookies_ready;
+    if (!wasReady && nowReady) {
+      closeGate();
+      toast('钉钉验证成功！Cookies 已就绪', 'ok');
+      setTimeout(function() { switchTab('dashboard'); }, 1500);
+    }
+    if (errEl) { errEl.textContent = '登录成功！Cookies 已保存。'; errEl.style.display = 'block'; errEl.style.background = '#dcfce7'; errEl.style.color = '#166534'; }
+    document.getElementById('qr-image').className = 'qr-image';
+    document.getElementById('qr-image').innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:48px;height:48px;color:var(--green);margin-bottom:8px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg><div style="font-size:13px;color:#166534;font-weight:500">登录成功</div></div>';
+    if (btn) btn.style.display = 'none';
   }
 }
 

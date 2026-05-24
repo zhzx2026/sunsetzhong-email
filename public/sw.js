@@ -1,5 +1,5 @@
 const CACHE = "smail-v6";
-const VERSION = "2.36";
+const VERSION = "2.43";
 
 const PRE_CACHE = ["/", "/login", "/register", "/manifest.json", "/offline.html"];
 
