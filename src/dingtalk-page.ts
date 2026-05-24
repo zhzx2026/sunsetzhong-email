@@ -762,20 +762,14 @@ function renderSettings() {
   renderPasswordState();
   if (state.status && state.status.cookies_ready) {
     state.loginSession = null;
-    state.qrReadyAt = null;
     document.getElementById('qr-image').className = 'qr-image';
     document.getElementById('qr-image').innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;opacity:.3;margin-bottom:8px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg><div style="font-size:12px;color:#166534">Cookies 已就绪</div></div>';
     document.getElementById('qr-status').innerHTML = '<span class="status-badge badge-ok">已通过钉钉验证</span>';
-    var btn = document.getElementById('btn-start-qr');
-    if (btn) btn.style.display = 'none';
-    var qrButtons = document.getElementById('qr-buttons');
-    if (qrButtons) qrButtons.innerHTML = '<button class="btn-ghost btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteCookies()">清除 Cookies</button>';
+    document.getElementById('qr-buttons').innerHTML = '<button class="btn-ghost btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteCookies()">清除 Cookies</button>';
     return;
   }
-  if (!state.loginSession || state.loginSession.status === 'completed' || state.loginSession.status === 'failed') {
-    var qrButtons = document.getElementById('qr-buttons');
-    if (qrButtons && !qrButtons.querySelector('#btn-start-qr')) qrButtons.innerHTML = '<button id="btn-start-qr" onclick="startQRLogin()">获取二维码</button>';
-  }
+  // Show button, fetch latest session from server to update UI
+  document.getElementById('qr-buttons').innerHTML = '<button id="btn-start-qr" onclick="startQRLogin()">获取二维码</button>';
   checkLoginStatus();
 }
 
@@ -826,7 +820,6 @@ async function savePassword() {
 
 async function deleteCookies() {
   if (!confirm('确定要清除 Cookies 吗？清除后需重新扫码验证。')) return;
-  console.log('[QR] deleteCookies called');
   var d = await api('/dingtalk/cookies', { method: 'DELETE' });
   if (d && d.ok) {
     state.status.cookies_ready = false;
@@ -834,12 +827,8 @@ async function deleteCookies() {
     state.qrReadyAt = null;
     toast('Cookies 已清除', 'info');
     loadStatus();
-    // Reset QR UI to initial state without auto-starting
-    document.getElementById('qr-image').className = 'qr-image';
-    document.getElementById('qr-image').innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;opacity:.3;margin-bottom:8px"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg><div style="font-size:11px">点击下方按钮获取二维码</div></div>';
-    document.getElementById('qr-status').textContent = '';
-    var qrButtons = document.getElementById('qr-buttons');
-    if (qrButtons) qrButtons.innerHTML = '<button id="btn-start-qr" onclick="startQRLogin()">获取二维码</button>';
+    updateQRUI(null);
+    document.getElementById('qr-buttons').innerHTML = '<button id="btn-start-qr" onclick="startQRLogin()">获取二维码</button>';
   } else {
     toast((d && d.error) || '清除失败', 'err');
   }
@@ -859,76 +848,40 @@ async function deletePassword() {
 
 // ── QR Login ──
 async function startQRLogin() {
-  if (state._restartTimer) { clearTimeout(state._restartTimer); state._restartTimer = null; }
-  console.log('[QR] startQRLogin called, session:', state.loginSession && state.loginSession.status);
-  if (state.loginSession) {
-    var s = state.loginSession;
-    if (s.status === 'pending' || s.status === 'qr_ready') {
-      console.log('[QR] startQRLogin skipped — active session:', s.status);
-      return;
-    }
-  }
-  state.qrStartedAt = Date.now();
-  state.qrReadyAt = null;
-  var errEl = document.getElementById('qr-error');
-  errEl.style.display = 'none';
+  console.log('[QR] startQRLogin');
   var btn = document.getElementById('btn-start-qr');
   btn.disabled = true;
-  btn.style.display = 'none';
-  document.getElementById('qr-status').innerHTML = '<span class="qr-spinner" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:6px"></span>正在启动...';
+  btn.textContent = '请求中...';
+  document.getElementById('qr-status').textContent = '';
+  document.getElementById('qr-error').style.display = 'none';
 
   var d = await api('/dingtalk/login-workflow', { method: 'POST' });
-  if (!d) { console.log('[QR] startQRLogin API returned null'); btn.disabled = false; btn.style.display = ''; return; }
-  if (d.error) { console.log('[QR] startQRLogin error:', d.error); errEl.textContent = d.error; errEl.style.display = 'block'; btn.disabled = false; btn.style.display = ''; return; }
-
-  console.log('[QR] session created, status:', d.login_session && d.login_session.status);
-  state.loginSession = d.login_session;
   btn.disabled = false;
-  btn.style.display = 'none';
-  if (d.login_session) {
-    var qrSrc = getQRImageSrc(d.login_session);
-    if (qrSrc) {
-      document.getElementById('qr-image').className = 'qr-image has-code';
-      document.getElementById('qr-image').innerHTML = '<img src="' + qrSrc + '" alt="QR Code" />';
-      document.getElementById('qr-status').textContent = '请用钉钉 App 扫码';
-    } else {
-      document.getElementById('qr-image').className = 'qr-image';
-      document.getElementById('qr-status').textContent = '等待生成二维码（约10-30秒）...';
-      document.getElementById('qr-image').innerHTML = '<div class="qr-spinner"></div>';
-    }
-  } else {
-    document.getElementById('qr-image').className = 'qr-image';
-    document.getElementById('qr-status').textContent = '等待生成二维码（约10-30秒）...';
-    document.getElementById('qr-image').innerHTML = '<div class="qr-spinner"></div>';
-  }
+  btn.textContent = '获取二维码';
+  if (!d) { console.log('[QR] API failed'); return; }
+  if (d.error) { document.getElementById('qr-error').textContent = d.error; document.getElementById('qr-error').style.display = 'block'; return; }
+
+  console.log('[QR] session:', d.login_session && d.login_session.status);
+  state.loginSession = d.login_session;
+  state.qrStartedAt = Date.now();
+  state.qrReadyAt = null;
+  updateQRUI(d.login_session);
 }
 
-async function checkLoginStatus() {
-  var errEl = document.getElementById('qr-error');
-  if (errEl) errEl.style.display = 'none';
-
-  var d = await api('/dingtalk/login-workflow');
-  if (!d) { console.log('[QR] checkLoginStatus API returned null'); return; }
-  state.loginSession = d.login_session;
-
-  if (!d.login_session) {
-    console.log('[QR] no session, restarting...');
-    document.getElementById('qr-image').innerHTML = '<div class="qr-spinner"></div>';
-    document.getElementById('qr-status').textContent = '正在重新启动...';
-    var btn = document.getElementById('btn-start-qr');
-    if (btn) btn.style.display = 'none';
-    if (state._restartTimer) clearTimeout(state._restartTimer);
-    state._restartTimer = setTimeout(function() { state._restartTimer = null; startQRLogin(); }, 2000);
+function updateQRUI(s) {
+  if (!s) {
+    document.getElementById('qr-image').className = 'qr-image';
+    document.getElementById('qr-image').innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;opacity:.3;margin-bottom:8px"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg><div style="font-size:11px">点击下方按钮获取二维码</div></div>';
+    document.getElementById('qr-status').textContent = '';
     return;
   }
 
-  var s = d.login_session;
-  console.log('[QR] status:', s.status, 'qrReadyAt:', state.qrReadyAt);
   var qrSrc = getQRImageSrc(s);
   if (qrSrc) {
     document.getElementById('qr-image').className = 'qr-image has-code';
     document.getElementById('qr-image').innerHTML = '<img src="' + qrSrc + '" alt="QR Code" />';
-  } else if (s.qr_url) {
+  } else if (s.status === 'pending') {
+    document.getElementById('qr-image').className = 'qr-image';
     document.getElementById('qr-image').innerHTML = '<div class="qr-spinner"></div>';
   }
 
@@ -937,74 +890,58 @@ async function checkLoginStatus() {
     console.log('[QR] qr_ready at:', state.qrReadyAt);
   }
 
-  var statusMap = {
-    pending: ['等待远程生成', 'badge-warn'],
-    qr_ready: ['请用钉钉扫码', 'badge-info'],
-    completed: ['登录成功', 'badge-ok'],
-    failed: ['登录失败', 'badge-no'],
-  };
-  var stInfo = statusMap[s.status] || ['未知: ' + s.status, 'badge-warn'];
-  var statusHtml = '<span class="status-badge ' + stInfo[1] + '">' + stInfo[0] + '</span>';
+  var map = { pending: ['等待远程生成', 'badge-warn'], qr_ready: ['请用钉钉扫码', 'badge-info'], completed: ['登录成功', 'badge-ok'], failed: ['登录失败', 'badge-no'] };
+  var st = map[s.status] || ['未知', 'badge-warn'];
+  var h = '<span class="status-badge ' + st[1] + '">' + st[0] + '</span>';
 
   if (s.status === 'pending') {
-    var waited = Math.floor((Date.now() - (state.qrStartedAt || Date.now())) / 1000);
-    statusHtml += '<div style="font-size:10px;color:var(--muted);margin-top:4px">已等待 ' + waited + ' 秒，约需 10-30 秒</div>';
+    var w = Math.floor((Date.now() - (state.qrStartedAt || Date.now())) / 1000);
+    h += '<div style="font-size:10px;color:var(--muted);margin-top:4px">已等待 ' + w + ' 秒，约需 10-30 秒</div>';
   }
-
-  if (s.status === 'failed') {
-    console.log('[QR] login failed:', s.error_message);
-    if (s.error_message) statusHtml += '<div style="font-size:10px;color:var(--muted);margin-top:4px">' + escHtml(s.error_message) + '</div>';
-    statusHtml += '<div style="margin-top:6px;color:var(--amber);font-size:12px">正在自动重试...</div>';
-    state.qrReadyAt = null;
-    if (state._restartTimer) clearTimeout(state._restartTimer);
-    state._restartTimer = setTimeout(function() { state._restartTimer = null; startQRLogin(); }, 2000);
-  }
-
   if (s.status === 'qr_ready') {
-    var qrAge = Math.floor((Date.now() - (state.qrReadyAt || Date.now())) / 1000);
-    var remaining = Math.max(0, 300 - qrAge);
-    var remainText = remaining > 60 ? Math.floor(remaining / 60) + '分' + (remaining % 60) + '秒' : remaining + '秒';
-    statusHtml += '<div style="font-size:10px;color:var(--muted);margin-top:4px">剩余: ' + remainText + '</div>';
-    if (remaining <= 0) {
-      console.log('[QR] code expired');
-      statusHtml += '<div style="margin-top:8px;color:var(--red);font-size:12px">二维码已过期</div>';
-      statusHtml += '<button class="btn-ghost btn-sm" style="margin-top:4px" onclick="event.stopPropagation();startQRLogin()">重新获取</button>';
+    var age = Math.floor((Date.now() - (state.qrReadyAt || Date.now())) / 1000);
+    var rem = Math.max(0, 300 - age);
+    var t = rem > 60 ? Math.floor(rem / 60) + '分' + (rem % 60) + '秒' : rem + '秒';
+    h += '<div style="font-size:10px;color:var(--muted);margin-top:4px">剩余: ' + t + '</div>';
+    if (rem <= 0) {
+      console.log('[QR] expired');
+      h += '<div style="margin-top:8px;color:var(--red);font-size:12px">二维码已过期</div>';
+      h += '<button class="btn-ghost btn-sm" style="margin-top:4px" onclick="event.stopPropagation();startQRLogin()">重新获取</button>';
       state.qrReadyAt = null;
-    } else if (remaining < 60) {
-      statusHtml += '<div style="margin-top:4px;font-size:10px;color:var(--amber)">即将过期，请尽快扫码</div>';
+    } else if (rem < 60) {
+      h += '<div style="margin-top:4px;font-size:10px;color:var(--amber)">即将过期，请尽快扫码</div>';
     }
   }
-
-  document.getElementById('qr-status').innerHTML = statusHtml;
-
-  // Button visibility based on state
-  var btn = document.getElementById('btn-start-qr');
-  if (btn) {
-    if (s.status === 'pending' || s.status === 'qr_ready') {
-      btn.style.display = 'none';
-    } else {
-      btn.style.display = '';
-      btn.disabled = false;
-    }
+  if (s.status === 'failed') {
+    console.log('[QR] failed:', s.error_message);
+    if (s.error_message) h += '<div style="font-size:10px;color:var(--muted);margin-top:4px">' + escHtml(s.error_message) + '</div>';
   }
+
+  document.getElementById('qr-status').innerHTML = h;
 
   if (s.status === 'completed') {
-    console.log('[QR] login completed, cleaning up');
+    console.log('[QR] completed');
     state.loginSession = null;
     state.qrReadyAt = null;
-    var wasReady = state.status && state.status.cookies_ready;
-    await loadStatus();
-    var nowReady = state.status && state.status.cookies_ready;
-    if (!wasReady && nowReady) {
-      closeGate();
-      toast('钉钉验证成功！Cookies 已就绪', 'ok');
-      setTimeout(function() { switchTab('dashboard'); }, 1500);
-    }
-    if (errEl) { errEl.textContent = '登录成功！Cookies 已保存。'; errEl.style.display = 'block'; errEl.style.background = '#dcfce7'; errEl.style.color = '#166534'; }
+    loadStatus().then(function() {
+      if (state.status && state.status.cookies_ready) {
+        closeGate();
+        toast('钉钉验证成功！Cookies 已就绪', 'ok');
+        // refresh settings to show cookies-ready state
+        if (document.getElementById('tab-settings').classList.contains('active')) renderSettings();
+      }
+    });
     document.getElementById('qr-image').className = 'qr-image';
     document.getElementById('qr-image').innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:48px;height:48px;color:var(--green);margin-bottom:8px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg><div style="font-size:13px;color:#166534;font-weight:500">登录成功</div></div>';
-    if (btn) btn.style.display = 'none';
   }
+}
+
+async function checkLoginStatus() {
+  var d = await api('/dingtalk/login-workflow');
+  if (!d) return;
+  console.log('[QR] checkLoginStatus:', d.login_session && d.login_session.status);
+  state.loginSession = d.login_session;
+  updateQRUI(d.login_session);
 }
 
 // ── Admin ──
@@ -1156,8 +1093,8 @@ function startPolling() {
         }
       }
     }
-    if (document.getElementById('tab-settings').classList.contains('active') && state.loginSession) {
-      if (state.loginSession.status !== 'completed') await checkLoginStatus();
+    if (document.getElementById('tab-settings').classList.contains('active') && state.status && !state.status.cookies_ready) {
+      await checkLoginStatus();
     }
   }, 2000);
 }
