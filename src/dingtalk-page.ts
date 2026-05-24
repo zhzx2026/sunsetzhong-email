@@ -1096,7 +1096,7 @@ function startPolling() {
     if (document.getElementById('tab-settings').classList.contains('active') && state.status && !state.status.cookies_ready) {
       await checkLoginStatus();
     }
-  }, 2000);
+  }, 30000);
 }
 
 window.addEventListener('online', function() { location.reload(); });
