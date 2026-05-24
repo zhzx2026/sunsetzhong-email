@@ -773,13 +773,10 @@ function renderSettings() {
     return;
   }
   if (!state.loginSession || state.loginSession.status === 'completed' || state.loginSession.status === 'failed') {
-    // restore normal button
     var qrButtons = document.getElementById('qr-buttons');
     if (qrButtons && !qrButtons.querySelector('#btn-start-qr')) qrButtons.innerHTML = '<button id="btn-start-qr" onclick="startQRLogin()">获取二维码</button>';
-    startQRLogin();
-  } else {
-    checkLoginStatus();
   }
+  checkLoginStatus();
 }
 
 function renderLegal() {
@@ -862,6 +859,7 @@ async function deletePassword() {
 
 // ── QR Login ──
 async function startQRLogin() {
+  if (state._restartTimer) { clearTimeout(state._restartTimer); state._restartTimer = null; }
   console.log('[QR] startQRLogin called, session:', state.loginSession && state.loginSession.status);
   if (state.loginSession) {
     var s = state.loginSession;
@@ -919,7 +917,8 @@ async function checkLoginStatus() {
     document.getElementById('qr-status').textContent = '正在重新启动...';
     var btn = document.getElementById('btn-start-qr');
     if (btn) btn.style.display = 'none';
-    setTimeout(function() { startQRLogin(); }, 2000);
+    if (state._restartTimer) clearTimeout(state._restartTimer);
+    state._restartTimer = setTimeout(function() { state._restartTimer = null; startQRLogin(); }, 2000);
     return;
   }
 
@@ -957,7 +956,8 @@ async function checkLoginStatus() {
     if (s.error_message) statusHtml += '<div style="font-size:10px;color:var(--muted);margin-top:4px">' + escHtml(s.error_message) + '</div>';
     statusHtml += '<div style="margin-top:6px;color:var(--amber);font-size:12px">正在自动重试...</div>';
     state.qrReadyAt = null;
-    setTimeout(function() { startQRLogin(); }, 2000);
+    if (state._restartTimer) clearTimeout(state._restartTimer);
+    state._restartTimer = setTimeout(function() { state._restartTimer = null; startQRLogin(); }, 2000);
   }
 
   if (s.status === 'qr_ready') {
