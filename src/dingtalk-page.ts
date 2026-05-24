@@ -837,7 +837,12 @@ async function deleteCookies() {
     state.qrReadyAt = null;
     toast('Cookies 已清除', 'info');
     loadStatus();
-    renderSettings();
+    // Reset QR UI to initial state without auto-starting
+    document.getElementById('qr-image').className = 'qr-image';
+    document.getElementById('qr-image').innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;opacity:.3;margin-bottom:8px"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg><div style="font-size:11px">点击下方按钮获取二维码</div></div>';
+    document.getElementById('qr-status').textContent = '';
+    var qrButtons = document.getElementById('qr-buttons');
+    if (qrButtons) qrButtons.innerHTML = '<button id="btn-start-qr" onclick="startQRLogin()">获取二维码</button>';
   } else {
     toast((d && d.error) || '清除失败', 'err');
   }
