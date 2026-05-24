@@ -768,9 +768,14 @@ function renderSettings() {
     document.getElementById('qr-status').innerHTML = '<span class="status-badge badge-ok">已通过钉钉验证</span>';
     var btn = document.getElementById('btn-start-qr');
     if (btn) btn.style.display = 'none';
+    var qrButtons = document.getElementById('qr-buttons');
+    if (qrButtons) qrButtons.innerHTML = '<button class="btn-ghost btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteCookies()">清除 Cookies</button>';
     return;
   }
   if (!state.loginSession || state.loginSession.status === 'completed' || state.loginSession.status === 'failed') {
+    // restore normal button
+    var qrButtons = document.getElementById('qr-buttons');
+    if (qrButtons && !qrButtons.querySelector('#btn-start-qr')) qrButtons.innerHTML = '<button id="btn-start-qr" onclick="startQRLogin()">获取二维码</button>';
     startQRLogin();
   } else {
     checkLoginStatus();
@@ -797,7 +802,7 @@ async function renderPasswordState() {
   var d = await api('/dingtalk/zip-password');
   var hasPw = d && d.has_password;
   document.getElementById('pw-state').innerHTML = hasPw
-    ? '<span class="status-badge badge-ok">已设置</span>'
+    ? '<span class="status-badge badge-ok">已设置</span> <button class="btn-ghost btn-sm" style="color:var(--red);border-color:var(--red);margin-left:8px" onclick="deletePassword()">清除密码</button>'
     : '<span class="status-badge badge-no">未设置</span>';
   document.getElementById('pw-input').value = '';
   document.getElementById('pw-confirm').value = '';
@@ -819,6 +824,34 @@ async function savePassword() {
     document.getElementById('pw-confirm').value = '';
   } else {
     msg.textContent = (d && d.error) || '保存失败'; msg.style.color = '#dc2626';
+  }
+}
+
+async function deleteCookies() {
+  if (!confirm('确定要清除 Cookies 吗？清除后需重新扫码验证。')) return;
+  console.log('[QR] deleteCookies called');
+  var d = await api('/dingtalk/cookies', { method: 'DELETE' });
+  if (d && d.ok) {
+    state.status.cookies_ready = false;
+    state.loginSession = null;
+    state.qrReadyAt = null;
+    toast('Cookies 已清除', 'info');
+    loadStatus();
+    renderSettings();
+  } else {
+    toast((d && d.error) || '清除失败', 'err');
+  }
+}
+
+async function deletePassword() {
+  if (!confirm('确定要清除下载密码吗？清除后需重新设置才能下载视频。')) return;
+  var d = await api('/dingtalk/zip-password', { method: 'DELETE' });
+  if (d && d.ok) {
+    state.status.has_zip_password = false;
+    toast('密码已清除', 'info');
+    renderPasswordState();
+  } else {
+    toast((d && d.error) || '清除失败', 'err');
   }
 }
 

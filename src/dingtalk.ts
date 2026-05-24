@@ -705,6 +705,17 @@ dt.post("/legal", async (c) => {
 // ── Cookies (manual upload disabled; use QR login) ──
 dt.post("/cookies", async (c) => c.json({ error: "manual cookie upload disabled; use QR login" }, 403));
 
+dt.delete("/cookies", async (c) => {
+  const u = getUser(c);
+  const env = c.env as Env;
+  if (isGuestUser(u.id)) {
+    await setGuestSetting(env, u.id, "cookies", "");
+  } else {
+    await env.DB.prepare("DELETE FROM dt_user_cookies WHERE user_id = ?1").bind(u.id).run();
+  }
+  return c.json({ ok: true });
+});
+
 // ── Zip password ──
 dt.get("/zip-password", async (c) => {
   const u = getUser(c);
@@ -732,7 +743,16 @@ dt.post("/zip-password", async (c) => {
   return c.json({ ok: true });
 });
 
-// ── Jobs ──
+dt.delete("/zip-password", async (c) => {
+  const u = getUser(c);
+  const env = c.env as Env;
+  if (isGuestUser(u.id)) {
+    await setGuestSetting(env, u.id, "zip_password", "");
+  } else {
+    await env.DB.prepare("UPDATE users SET dt_zip_password = '' WHERE id = ?1").bind(u.id).run();
+  }
+  return c.json({ ok: true });
+});
 dt.get("/jobs", async (c) => {
   const u = getUser(c);
   const env = c.env as Env;
