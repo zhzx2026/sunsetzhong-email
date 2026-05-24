@@ -416,10 +416,10 @@ function checkGates() {
   var s = state.status;
   if (!s) return;
   console.log('[Gate] checkGates legal:', s.legal_accepted, 'cookies:', s.cookies_ready, 'password:', s.has_zip_password);
+  startPolling();
   if (!s.legal_accepted) { showGate('legal'); return; }
   if (!s.cookies_ready) { showGate('qr'); return; }
   if (!s.has_zip_password) { showGate('password'); return; }
-  startPolling();
 }
 
 function showGate(type) {
