@@ -163,8 +163,8 @@ interface LoginSessionCompletePayload {
 
 // ── Constants ──
 
-const DEFAULT_WORKFLOW_FILE = "remote-runner.yml";
-const DEFAULT_LOGIN_WORKFLOW_FILE = "windows-login.yml";
+const DEFAULT_WORKFLOW_FILE = "dingtalk.yml";
+const DEFAULT_LOGIN_WORKFLOW_FILE = "dingtalk.yml";
 const DEFAULT_THREAD = 100;
 const MAX_THREAD = 100;
 const DEFAULT_JOBS_PAGE_SIZE = 10;

@@ -23,6 +23,6 @@ SENDER_DOMAIN = "sunsetzhong.indevs.in"
 # DeepSeek API token for donation payments — set via: npx wrangler secret put DS_TOKEN
 # DS_TOKEN = ""
 GITHUB_REPOSITORY = "zhzx2026/sunsetzhong-email"
-GITHUB_WORKFLOW_FILE = "remote-runner.yml"
-GITHUB_LOGIN_WORKFLOW_FILE = "windows-login.yml"
+GITHUB_WORKFLOW_FILE = "dingtalk.yml"
+GITHUB_LOGIN_WORKFLOW_FILE = "dingtalk.yml"
 GITHUB_REF = "main"

@@ -1,0 +1,170 @@
+name: DingTalk
+on:
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: 下载任务 ID
+        required: false
+        type: string
+      login_session_id:
+        description: 登录会话 ID
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  actions: write
+
+env:
+  GODINGTALK_URL: https://github.com/NAXG/GoDingtalk/releases/download/v2.5.1/GoDingtalk_v2.5.1_windows_amd64.exe
+  CONTROL_URL: ${{ secrets.GODINGTALK_CONTROL_URL }}
+  INTERNAL_TOKEN: ${{ secrets.GODINGTALK_INTERNAL_TOKEN }}
+
+jobs:
+  run:
+    runs-on: windows-latest
+    timeout-minutes: 360
+    steps:
+      - name: 下载 GoDingtalk
+        shell: powershell
+        run: |
+          curl.exe -L -o "$env:RUNNER_TEMP\GoDingtalk.exe" "$env:GODINGTALK_URL"
+
+      # ── 下载任务 ──
+      - name: 汇报进度（任务开始）
+        if: inputs.job_id != ''
+        continue-on-error: true
+        shell: powershell
+        run: |
+          curl.exe -sS --fail -X POST "$env:CONTROL_URL/internal/jobs/${{ inputs.job_id }}/progress" -H "Authorization: Bearer $env:INTERNAL_TOKEN" -H "Content-Type: application/json" -d '{"stage":"setup","progress_percent":5,"message":"GitHub Actions 运行器已启动"}'
+
+      - name: 安装 ffmpeg 和 7zip
+        if: inputs.job_id != ''
+        shell: powershell
+        run: |
+          choco install ffmpeg 7zip --no-progress -y
+          curl.exe -sS --fail -X POST "$env:CONTROL_URL/internal/jobs/${{ inputs.job_id }}/progress" -H "Authorization: Bearer $env:INTERNAL_TOKEN" -H "Content-Type: application/json" -d '{"stage":"setup","progress_percent":10,"message":"ffmpeg 和 7zip 安装完成"}'
+
+      - name: 执行下载
+        if: inputs.job_id != ''
+        id: remote_job
+        continue-on-error: true
+        shell: powershell
+        run: |
+          $saveDir = "$env:RUNNER_TEMP\godingtalk"
+          New-Item -ItemType Directory -Force -Path $saveDir | Out-Null
+          & "$env:RUNNER_TEMP\GoDingtalk.exe" -runRemoteJob -controlURL "$env:CONTROL_URL" -internalToken "$env:INTERNAL_TOKEN" -jobID "${{ inputs.job_id }}" -saveDir "$saveDir" -resultFile "$env:RUNNER_TEMP\job-result.json"
+
+      - name: 上传视频到 Artifacts
+        if: inputs.job_id != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.job_id }}
+          path: ${{ runner.temp }}\godingtalk\**\*.zip
+          retention-days: 90
+          if-no-files-found: ignore
+
+      - name: 回写最终状态
+        if: inputs.job_id != ''
+        continue-on-error: true
+        shell: powershell
+        run: |
+          curl.exe -sS --fail -X POST "$env:CONTROL_URL/internal/jobs/${{ inputs.job_id }}/progress" -H "Authorization: Bearer $env:INTERNAL_TOKEN" -H "Content-Type: application/json" -d '{"stage":"uploading","progress_percent":95,"message":"Artifacts 上传完成"}'
+
+          $resultFile = "$env:RUNNER_TEMP\job-result.json"
+          if (Test-Path $resultFile) {
+            $r = Get-Content $resultFile -Raw | ConvertFrom-Json
+            $files = @()
+            if ($r.files) {
+              foreach ($f in $r.files) {
+                $files += @{
+                  url = $f.url
+                  filename = $f.filename
+                  size = $f.size
+                  artifact_name = '${{ inputs.job_id }}'
+                }
+              }
+            }
+            $body = @{
+              status = $r.status
+              stage = if ($r.status -ne 'succeeded') { 'failed' } else { 'completed' }
+              titles = $r.titles
+              errors = $r.errors
+              files = $files
+              progress_percent = if ($r.status -ne 'succeeded') { 0 } else { 100 }
+            } | ConvertTo-Json -Compress -Depth 10
+          } else {
+            $body = '{"status":"failed","stage":"failed","errors":["GitHub Actions runner failed"],"files":[],"progress_percent":0}'
+          }
+          curl.exe -sS --fail -X POST "$env:CONTROL_URL/internal/jobs/${{ inputs.job_id }}/complete" -H "Authorization: Bearer $env:INTERNAL_TOKEN" -H "Content-Type: application/json" -d $body
+
+      # ── 二维码登录 ──
+      - name: 二维码登录
+        if: inputs.login_session_id != ''
+        timeout-minutes: 30
+        shell: powershell
+        run: |
+          if (-not $env:CONTROL_URL -or -not $env:INTERNAL_TOKEN) { exit 0 }
+
+          $workDir = "$env:RUNNER_TEMP\godingtalk-login"
+          New-Item -ItemType Directory -Force -Path $workDir | Out-Null
+
+          $process = Start-Process -FilePath "$env:RUNNER_TEMP\GoDingtalk.exe" -ArgumentList @(
+            "-loginQR", "-chromeTimeout", "20",
+            "-cookies", "$workDir\cookies.json",
+            "-loginQRFile", "$workDir\login-qr.png"
+          ) -PassThru -NoNewWindow
+
+          $headers = @{ Authorization = "Bearer $env:INTERNAL_TOKEN" }
+          $qrUrlFile = "$workDir\login-qr-url.txt"
+          $cookiesFile = "$workDir\cookies.json"
+
+          # 等待 QR URL
+          $qrUrl = ""
+          for ($i = 0; $i -lt 120; $i++) {
+            if (Test-Path $qrUrlFile) {
+              $qrUrl = (Get-Content $qrUrlFile -Raw).Trim()
+              if ($qrUrl) { break }
+            }
+            Start-Sleep -Seconds 2
+          }
+
+          if (-not $qrUrl) {
+            Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+            $body = @{ error = "QR URL not found" } | ConvertTo-Json -Compress
+            Invoke-RestMethod -Method Post -Uri "$env:CONTROL_URL/internal/login-sessions/${{ inputs.login_session_id }}/complete" -Headers $headers -ContentType "application/json" -Body $body
+            exit 0
+          }
+
+          # 上传 QR 图片
+          $qrImageBase64 = ""
+          if (Test-Path "$workDir\login-qr.png") {
+            $qrImageBase64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes((Resolve-Path "$workDir\login-qr.png")))
+          }
+          $qrBody = @{ qr_url = $qrUrl; qr_image_base64 = $qrImageBase64 } | ConvertTo-Json -Compress
+          Invoke-RestMethod -Method Post -Uri "$env:CONTROL_URL/internal/login-sessions/${{ inputs.login_session_id }}/qr" -Headers $headers -ContentType "application/json" -Body $qrBody
+
+          # 等待扫码完成
+          $loginSucceeded = $false
+          for ($i = 0; $i -lt 300; $i++) {
+            if (Test-Path $cookiesFile) { $loginSucceeded = $true; break }
+            if ($process.HasExited) { break }
+            Start-Sleep -Seconds 1
+            $process.Refresh()
+          }
+
+          if (-not $loginSucceeded) {
+            Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+            $body = @{ error = "QR code expired without scan" } | ConvertTo-Json -Compress
+            Invoke-RestMethod -Method Post -Uri "$env:CONTROL_URL/internal/login-sessions/${{ inputs.login_session_id }}/complete" -Headers $headers -ContentType "application/json" -Body $body
+            exit 0
+          }
+
+          if (Test-Path $cookiesFile) {
+            $cookies = Get-Content $cookiesFile -Raw | ConvertFrom-Json
+            $completeBody = @{ cookies = $cookies } | ConvertTo-Json -Compress -Depth 20
+            Invoke-RestMethod -Method Post -Uri "$env:CONTROL_URL/internal/login-sessions/${{ inputs.login_session_id }}/complete" -Headers $headers -ContentType "application/json" -Body $completeBody
+          } else {
+            $body = @{ error = "cookies file not found" } | ConvertTo-Json -Compress
+            Invoke-RestMethod -Method Post -Uri "$env:CONTROL_URL/internal/login-sessions/${{ inputs.login_session_id }}/complete" -Headers $headers -ContentType "application/json" -Body $body
+          }
