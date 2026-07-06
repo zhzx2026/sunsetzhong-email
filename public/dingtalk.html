@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>视频下载 — S-MAIL</title>
+<style>
+:root {
+  --bg: #f0f2f5;
+  --surface: #ffffff;
+  --surface-hover: #f8fafc;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --text-secondary: #475569;
+  --muted: #94a3b8;
+  --accent: #6366f1;
+  --accent-soft: rgba(99,102,241,0.1);
+  --accent-gradient: linear-gradient(135deg,#6366f1,#8b5cf6);
+  --green: #22c55e;
+  --red: #ef4444;
+  --amber: #f59e0b;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+  --shadow: 0 1px 2px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+  --font: 'Inter','PingFang SC',system-ui,-apple-system,sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme:dark) {
+  :root {
+    --bg: #0b0d14;
+    --surface: #131626;
+    --surface-hover: #1a1d33;
+    --border: rgba(255,255,255,0.08);
+    --text: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --muted: #64748b;
+    --accent: #818cf8;
+    --accent-soft: rgba(129,140,248,0.12);
+    --accent-gradient: linear-gradient(135deg,#818cf8,#a78bfa);
+    --shadow: 0 1px 2px rgba(0,0,0,0.2);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.4);
+    color-scheme: dark;
+  }
+  input,textarea{background:var(--bg)!important;color:var(--text)!important}
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+@media (prefers-color-scheme:dark){::-webkit-scrollbar-thumb{background:#475569}}
+
+#main{max-width:680px;margin:0 auto;padding:20px 16px 80px}
+
+/* ── header ── */
+.header{text-align:center;padding:32px 0 24px}
+.logo{width:52px;height:52px;border-radius:14px;background:var(--accent-gradient);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:#fff;font-size:24px;font-weight:700;box-shadow:0 4px 16px rgba(99,102,241,.3)}
+h1{font-size:20px;font-weight:700;margin-bottom:4px}
+.sub{color:var(--muted);font-size:13px}
+
+/* ── card ── */
+.card{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);padding:20px;margin-bottom:14px;box-shadow:var(--shadow);transition:box-shadow .2s}
+.card:hover{box-shadow:var(--shadow-md)}
+.card h2{font-size:15px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card h2 .icon{width:20px;height:20px;color:var(--accent);flex-shrink:0}
+
+/* ── forms ── */
+textarea,input[type="text"],input[type="password"]{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font:inherit;font-size:14px;color:var(--text);background:var(--bg);outline:none;transition:border-color .2s,box-shadow .2s}
+textarea:focus,input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+/* ── buttons ── */
+button{background:var(--accent-gradient);color:#fff;border:none;border-radius:var(--radius);padding:11px 22px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(99,102,241,.25)}
+button:active{transform:translateY(0)}
+button:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-ghost{background:var(--bg);color:var(--text-secondary)}
+.btn-ghost:hover{background:var(--surface-hover);box-shadow:none;transform:none}
+.btn-danger{background:var(--red)}
+.btn-danger:hover{box-shadow:0 4px 12px rgba(239,68,68,.25)}
+.btn-sm{padding:6px 14px;font-size:12px;font-weight:500;border-radius:var(--radius-sm)}
+.btn-block{width:100%}
+
+/* ── badges ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:var(--radius-full);font-size:11px;font-weight:600}
+.badge-ok{background:rgba(34,197,94,.12);color:var(--green)}
+.badge-no{background:rgba(239,68,68,.1);color:var(--red)}
+.badge-warn{background:rgba(245,158,11,.12);color:var(--amber)}
+.badge-info{background:var(--accent-soft);color:var(--accent)}
+
+/* ── status bar ── */
+.status-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.status-item{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg);border-radius:var(--radius-sm);font-size:12px}
+.status-item .label{color:var(--muted)}
+
+/* ── QR overlay ── */
+.overlay{display:none;position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.5);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);align-items:center;justify-content:center}
+.overlay.show{display:flex}
+.overlay-card{background:var(--surface);border-radius:20px;padding:32px 28px;width:90%;max-width:380px;text-align:center;box-shadow:var(--shadow-lg);animation:slideUp .35s cubic-bezier(.34,1.56,.64,1)}
+@keyframes slideUp{from{opacity:0;transform:translateY(24px) scale(.95)}to{opacity:1;transform:none}}
+.overlay-card h2{font-size:17px;font-weight:700;margin-bottom:4px}
+.overlay-card p{font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+.qr-box{width:200px;height:200px;margin:0 auto 16px;border:2px dashed var(--border);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--bg)}
+.qr-box img{width:100%;height:100%;object-fit:contain;padding:12px}
+.qr-timer{font-size:30px;font-weight:700;color:var(--accent);margin-bottom:4px;font-variant-numeric:tabular-nums}
+.qr-timer.warn{color:var(--amber)}
+.qr-timer.expired{color:var(--red)}
+
+/* ── job list ── */
+.job-item{border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;transition:all .15s}
+.job-item:hover{border-color:var(--accent);box-shadow:var(--shadow-md)}
+.job-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.job-title{font-size:14px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.job-status{font-size:11px;font-weight:600;padding:3px 12px;border-radius:var(--radius-full)}
+.job-meta{font-size:12px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap}
+.job-progress{height:5px;background:var(--bg);border-radius:3px;margin:10px 0;overflow:hidden}
+.job-progress-fill{height:100%;background:var(--accent-gradient);border-radius:3px;transition:width .5s;width:0%}
+.job-actions{margin-top:10px;display:flex;gap:8px}
+
+/* ── toast ── */
+#toast-container{position:fixed;top:16px;right:12px;left:12px;z-index:200;display:flex;flex-direction:column;gap:8px;max-width:640px;margin:0 auto;pointer-events:none}
+.toast{padding:13px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);animation:slideDown .35s cubic-bezier(.34,1.56,.64,1);pointer-events:auto;transition:opacity .3s}
+.toast.ok{background:var(--green);color:#fff}
+.toast.err{background:var(--red);color:#fff}
+.toast.info{background:var(--accent);color:#fff}
+@keyframes slideDown{from{opacity:0;transform:translateY(-16px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* ── empty ── */
+.empty-state{text-align:center;padding:32px 24px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+
+<div id="main">
+  <div class="header">
+    <div class="logo">S</div>
+    <h1>视频下载</h1>
+    <p class="sub">输入钉钉直播/回放链接，下载加密视频</p>
+  </div>
+
+  <!-- Status bar -->
+  <div class="card">
+    <h2><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>状态</h2>
+    <div class="status-row">
+      <div class="status-item"><span class="label">Cookie</span> <span id="s-cookie" class="badge badge-no">未就绪</span></div>
+      <div class="status-item"><span class="label">ZIP密码</span> <span id="s-zip" class="badge badge-no">未设置</span></div>
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <div class="card">
+    <h2><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>提交下载</h2>
+    <textarea id="url-input" placeholder="输入视频页面 URL，每行一个" rows="3" style="resize:vertical;min-height:60px;margin-bottom:10px"></textarea>
+    <div id="url-count" style="font-size:12px;color:var(--muted);margin-bottom:8px;display:none"></div>
+    <button id="btn-submit" class="btn-block">开始下载</button>
+    <div id="submit-msg" style="margin-top:10px;font-size:13px;min-height:20px"></div>
+  </div>
+
+  <!-- QR overlay -->
+  <div class="overlay" id="qr-overlay">
+    <div class="overlay-card">
+      <h2>📱 扫码登录</h2>
+      <p>需要钉钉 Cookies 才能下载，请用钉钉 App 扫描</p>
+      <div class="qr-box" id="qr-box">
+        <div id="qr-spinner" style="width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div>
+        <img id="qr-img" style="display:none" alt="QR Code" />
+      </div>
+      <div class="qr-timer" id="qr-timer"></div>
+      <div id="qr-status-text" style="font-size:13px;color:var(--muted);margin-bottom:14px;min-height:20px"></div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn-ghost" id="btn-skip-qr" style="display:none">跳过</button>
+        <button id="btn-retry-qr" style="display:none">重新获取</button>
+        <button id="btn-close-qr" class="btn-ghost">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ZIP password overlay -->
+  <div class="overlay" id="zip-overlay">
+    <div class="overlay-card">
+      <h2>🔐 设置下载密码</h2>
+      <p>下载的视频将打包为加密 ZIP，请设置解压密码</p>
+      <input type="password" id="zip-pw" placeholder="输入密码（至少4位）" style="margin-bottom:10px" />
+      <input type="password" id="zip-pw2" placeholder="确认密码" style="margin-bottom:14px" />
+      <div id="zip-msg" style="font-size:13px;color:var(--red);margin-bottom:10px;min-height:20px"></div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button id="btn-save-zip">保存密码</button>
+        <button class="btn-ghost" id="btn-close-zip">稍后设置</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Jobs -->
+  <div class="card">
+    <h2><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>任务列表</h2>
+    <div id="jobs-list"></div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<script>window.__DT_TOKEN = '';</script>
+<script>
+var state = { status: null, jobs: [], qrSession: null, qrStartedAt: null, qrReadyAt: null, polling: false, qrUrl: '' };
+const DT_TOKEN = window.__DT_TOKEN || '';
+
+async function api(path, opts) {
+  opts = opts || {};
+  if (DT_TOKEN) { var h = opts.headers || {}; h['x-dt-token'] = DT_TOKEN; opts.headers = h; }
+  try { var r = await fetch('/api' + path, { credentials: 'include', ...opts }); return await r.json(); }
+  catch(e) { return null; }
+}
+
+function toast(msg, type) {
+  type = type || 'info';
+  var el = document.createElement('div'); el.className = 'toast ' + type; el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(function() { el.style.opacity = '0'; setTimeout(function() { el.remove(); }, 300); }, 2500);
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
+
+// ── Load status ──
+async function loadStatus() {
+  var d = await api('/dingtalk/status');
+  if (d && d.ok) {
+    state.status = d;
+    document.getElementById('s-cookie').textContent = d.cookies_ready ? '已就绪' : '未就绪';
+    document.getElementById('s-cookie').className = 'badge ' + (d.cookies_ready ? 'badge-ok' : 'badge-no');
+    document.getElementById('s-zip').textContent = d.has_zip_password ? '已设置' : '未设置';
+    document.getElementById('s-zip').className = 'badge ' + (d.has_zip_password ? 'badge-ok' : 'badge-no');
+  }
+}
+
+// ── QR Flow ──
+async function startQR() {
+  var d = await api('/dingtalk/login-workflow', { method: 'POST' });
+  if (!d || d.error) { toast((d&&d.error)||'请求失败', 'err'); return; }
+  state.qrSession = d.login_session;
+  state.qrStartedAt = Date.now();
+  state.qrReadyAt = null;
+  showQR();
+}
+
+function showQR() {
+  var overlay = document.getElementById('qr-overlay');
+  var spinner = document.getElementById('qr-spinner');
+  var img = document.getElementById('qr-img');
+  var timer = document.getElementById('qr-timer');
+  var statusText = document.getElementById('qr-status-text');
+  var skipBtn = document.getElementById('btn-skip-qr');
+  var retryBtn = document.getElementById('btn-retry-qr');
+
+  overlay.classList.add('show');
+  spinner.style.display = 'block'; img.style.display = 'none';
+  timer.textContent = ''; timer.className = 'qr-timer';
+  statusText.textContent = '等待二维码生成...';
+  skipBtn.style.display = 'none';
+  retryBtn.style.display = 'none';
+}
+
+function updateQR() {
+  if (!state.qrSession) return;
+  var s = state.qrSession;
+  var spinner = document.getElementById('qr-spinner');
+  var img = document.getElementById('qr-img');
+  var timer = document.getElementById('qr-timer');
+  var statusText = document.getElementById('qr-status-text');
+  var skipBtn = document.getElementById('btn-skip-qr');
+  var retryBtn = document.getElementById('btn-retry-qr');
+
+  if (s.qr_image_base64) {
+    spinner.style.display = 'none'; img.style.display = 'block';
+    img.src = 'data:image/png;base64,' + s.qr_image_base64;
+  }
+
+  if (s.status === 'qr_ready') {
+    if (!state.qrReadyAt) state.qrReadyAt = Date.now();
+    var elapsed = Math.floor((Date.now() - state.qrReadyAt) / 1000);
+    var remaining = Math.max(0, 180 - elapsed);
+    var min = Math.floor(remaining / 60), sec = remaining % 60;
+    timer.textContent = min + ':' + (sec < 10 ? '0' : '') + sec;
+    timer.className = 'qr-timer' + (remaining < 30 ? ' warn' : '');
+    statusText.textContent = '请用钉钉扫码登录';
+    skipBtn.style.display = 'block';
+    retryBtn.style.display = 'none';
+
+    if (remaining <= 0) {
+      timer.textContent = '已过期';
+      timer.className = 'qr-timer expired';
+      statusText.textContent = '二维码已过期';
+      skipBtn.style.display = 'none';
+      retryBtn.style.display = 'inline-flex';
+    }
+  } else if (s.status === 'completed') {
+    toast('登录成功！Cookies 已就绪', 'ok');
+    document.getElementById('qr-overlay').classList.remove('show');
+    state.qrSession = null;
+    loadStatus();
+  } else if (s.status === 'failed') {
+    statusText.textContent = s.error_message || '登录失败';
+    skipBtn.style.display = 'none';
+    retryBtn.style.display = 'inline-flex';
+  }
+}
+
+async function pollQR() {
+  var d = await api('/dingtalk/login-workflow?id=' + (state.qrSession ? state.qrSession.id : ''));
+  if (d && d.login_session) {
+    state.qrSession = d.login_session;
+    updateQR();
+  }
+}
+
+document.getElementById('btn-skip-qr').onclick = function() {
+  document.getElementById('qr-overlay').classList.remove('show');
+  toast('已跳过登录（Cookie 未就绪，部分功能受限）', 'info');
+};
+document.getElementById('btn-retry-qr').onclick = function() {
+  startQR();
+};
+document.getElementById('btn-close-qr').onclick = function() {
+  document.getElementById('qr-overlay').classList.remove('show');
+};
+
+// ── ZIP password ──
+document.getElementById('btn-save-zip').onclick = async function() {
+  var pw = document.getElementById('zip-pw').value;
+  var pw2 = document.getElementById('zip-pw2').value;
+  var msg = document.getElementById('zip-msg');
+  if (pw.length < 4) { msg.textContent = '密码至少4位'; return; }
+  if (pw !== pw2) { msg.textContent = '两次输入不一致'; return; }
+  msg.textContent = '';
+  var d = await api('/dingtalk/zip-password', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: pw }) });
+  if (d && d.ok) {
+    toast('密码已保存', 'ok');
+    document.getElementById('zip-overlay').classList.remove('show');
+    loadStatus();
+  } else { msg.textContent = (d && d.error) || '保存失败'; }
+};
+document.getElementById('btn-close-zip').onclick = function() { document.getElementById('zip-overlay').classList.remove('show'); };
+
+// ── Submit job ──
+document.getElementById('btn-submit').onclick = async function() {
+  var input = document.getElementById('url-input');
+  var msg = document.getElementById('submit-msg');
+  var btn = this;
+  var lines = input.value.trim().split(/[\n\r]+/).map(function(l){return l.trim()}).filter(Boolean);
+  if (!lines.length) { msg.textContent = '请输入至少一个 URL'; msg.style.color = 'var(--red)'; return; }
+
+  // Check cookies
+  if (!state.status || !state.status.cookies_ready) {
+    msg.innerHTML = '需要钉钉 Cookies 才能下载。<a href="#" id="qr-link">点此扫码登录</a>';
+    msg.style.color = 'var(--muted)';
+    document.getElementById('qr-link').onclick = function(e) { e.preventDefault(); startQR(); };
+    return;
+  }
+  // Check zip password
+  if (!state.status || !state.status.has_zip_password) {
+    document.getElementById('zip-overlay').classList.add('show');
+    msg.textContent = '请先设置下载密码';
+    msg.style.color = 'var(--muted)';
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = '提交中...';
+  msg.textContent = '正在提交...'; msg.style.color = 'var(--muted)';
+
+  var body = lines.length === 1
+    ? { url: lines[0], thread: 100, create_video_list: true }
+    : { urls: lines, thread: 100, create_video_list: true };
+  var d = await api('/dingtalk/jobs', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+
+  btn.disabled = false; btn.textContent = '开始下载';
+  if (d && !d.error) {
+    msg.textContent = '任务已提交，等待下载器启动...';
+    msg.style.color = 'var(--green)';
+    input.value = '';
+    loadJobs();
+  } else {
+    msg.textContent = (d && d.error) || '提交失败';
+    msg.style.color = 'var(--red)';
+  }
+};
+
+// ── URL count ──
+document.getElementById('url-input').addEventListener('input', function() {
+  var c = this.value.trim().split(/[\n\r]+/).filter(function(l){return l.trim()}).length;
+  var el = document.getElementById('url-count');
+  if (c > 1) { el.textContent = c + ' 个 URL'; el.style.display = 'block'; }
+  else el.style.display = 'none';
+});
+
+// ── Jobs list ──
+async function loadJobs() {
+  var d = await api('/dingtalk/jobs?page_size=20');
+  if (!d) return;
+  state.jobs = d.jobs || [];
+  var el = document.getElementById('jobs-list');
+  if (!state.jobs.length) { el.innerHTML = '<div class="empty-state">暂无任务</div>'; return; }
+  el.innerHTML = state.jobs.map(function(j) {
+    var st = { queued: ['badge-warn','排队'], running: ['badge-info','下载中'], succeeded: ['badge-ok','完成'], failed: ['badge-no','失败'] }[j.status] || ['badge-warn','未知'];
+    var pct = j.progress_percent || 0;
+    var dt = new Date(j.created_at).toLocaleString('zh-CN');
+    var errors = (j.errors||[]).slice(0,2);
+    var files = (j.files||[]).slice(0,3);
+    var progBar = '<div class="job-progress"><div class="job-progress-fill" style="width:'+Math.max(pct,2)+'%"></div></div>';
+    var dlBtn = (j.status==='succeeded' && files.length && files[0].download_url)
+      ? '<a class="btn-sm" style="background:var(--accent-gradient);color:#fff;text-decoration:none" href="'+esc(files[0].download_url)+'" download>下载 ZIP</a>' : '';
+    var cancelBtn = (j.status==='running'||j.status==='queued')
+      ? '<button class="btn-ghost btn-sm" onclick="cancelJob(\''+j.id+'\')">取消</button>' : '';
+    var progressInfo = j.status==='running'
+      ? '<span>'+pct+'% · '+(j.current_title||'')+'</span>'
+      : j.status==='succeeded' ? '<span>100%</span>' : '';
+    return '<div class="job-item"><div class="job-header"><span class="job-title">'+esc(j.current_title||(j.urls&&j.urls[0])||'-')+'</span><span class="job-status '+st[0]+'">'+st[1]+'</span></div><div class="job-meta">'+dt+' '+progressInfo+'</div>'+
+      progBar +
+      (errors.length ? '<div style="font-size:12px;color:var(--red);margin-top:6px">'+errors.join('; ')+'</div>' : '') +
+      '<div class="job-actions">'+dlBtn+cancelBtn+'</div></div>';
+  }).join('');
+}
+
+async function cancelJob(id) {
+  if (!confirm('取消此任务？')) return;
+  var d = await api('/dingtalk/jobs/'+id+'/cancel', { method: 'POST' });
+  if (d && d.ok) { toast('已取消', 'info'); loadJobs(); loadStatus(); }
+  else { toast((d&&d.error)||'取消失败', 'err'); }
+}
+
+// ── Polling ──
+function startPolling() {
+  if (state.polling) return;
+  state.polling = true;
+  setInterval(async function() {
+    loadStatus();
+    loadJobs();
+    if (document.getElementById('qr-overlay').classList.contains('show') && state.qrSession) {
+      await pollQR();
+    }
+  }, 2000);
+}
+
+// ── Init ──
+async function init() {
+  await loadStatus();
+  loadJobs();
+  startPolling();
+}
+
+init();
+</script>
+</body>
+</html>
