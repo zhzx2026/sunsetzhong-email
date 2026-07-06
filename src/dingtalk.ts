@@ -14,7 +14,6 @@ interface Env {
   GITHUB_ACTIONS_TOKEN?: string;
   GITHUB_REPOSITORY?: string;
   GITHUB_WORKFLOW_FILE?: string;
-  GITHUB_LOGIN_WORKFLOW_FILE?: string;
   GITHUB_REF?: string;
   AUTH_SALT?: string;
 }
@@ -164,7 +163,6 @@ interface LoginSessionCompletePayload {
 // ── Constants ──
 
 const DEFAULT_WORKFLOW_FILE = "dingtalk.yml";
-const DEFAULT_LOGIN_WORKFLOW_FILE = "dingtalk.yml";
 const DEFAULT_THREAD = 100;
 const MAX_THREAD = 100;
 const DEFAULT_JOBS_PAGE_SIZE = 10;
@@ -443,17 +441,11 @@ async function dispatchGitHubWorkflow(env: Env, workflowFile: string, inputs?: R
   }
 }
 
-async function triggerGitHubRunner(env: Env, jobID: string): Promise<void> {
+async function dispatchWorkflow(env: Env, inputs?: Record<string, string>): Promise<{ ref: string; workflow_file: string; workflow_url: string; runs_url: string }> {
   if (!env.GITHUB_REPOSITORY || !env.GITHUB_ACTIONS_TOKEN) throw new Error("GitHub Actions dispatch is not configured");
   const workflowFile = env.GITHUB_WORKFLOW_FILE || DEFAULT_WORKFLOW_FILE;
-  await dispatchGitHubWorkflow(env, workflowFile, { job_id: jobID });
-}
-
-async function triggerGitHubLogin(env: Env, loginSessionID: string, userID: string): Promise<{ ref: string; workflow_file: string; workflow_url: string; runs_url: string }> {
-  if (!env.GITHUB_REPOSITORY || !env.GITHUB_ACTIONS_TOKEN) throw new Error("GitHub Actions dispatch is not configured");
-  const workflowFile = env.GITHUB_LOGIN_WORKFLOW_FILE || DEFAULT_LOGIN_WORKFLOW_FILE;
   const ref = env.GITHUB_REF || "main";
-  await dispatchGitHubWorkflow(env, workflowFile, { login_session_id: loginSessionID, owner_user_id: userID });
+  await dispatchGitHubWorkflow(env, workflowFile, inputs);
   return { ref, workflow_file: workflowFile, workflow_url: githubWorkflowURL(env.GITHUB_REPOSITORY, workflowFile), runs_url: githubRunHistoryURL(env.GITHUB_REPOSITORY, workflowFile) };
 }
 
@@ -489,7 +481,7 @@ async function createJob(env: Env, ownerUserID: string, payload: CreateJobPayloa
     `INSERT INTO dt_jobs (id, owner_user_id, status, stage, urls_json, thread, output_subdir, create_video_list, current_title, completed_parts, total_parts, progress_percent, titles_json, errors_json, files_json, runner_run_id, created_at, updated_at, started_at, finished_at) VALUES (?1, ?2, 'queued', 'waiting_runner', ?3, ?4, ?5, ?6, '', 0, 0, 0, '[]', '[]', '[]', '', ?7, ?7, NULL, NULL)`
   ).bind(jobID, ownerUserID, JSON.stringify(urls), thread, outputSubdir, createVideoList ? 1 : 0, createdAt).run();
   await insertEvent(env, jobID, "info", "任务已创建，正在触发 GitHub Actions 远程下载器。");
-  try { await triggerGitHubRunner(env, jobID); } catch (error) {
+  try { await dispatchWorkflow(env, { job_id: jobID }); } catch (error) {
     const message = error instanceof Error ? error.message : "failed to trigger GitHub Actions";
     await completeJob(env, jobID, { status: "failed", stage: "failed", errors: [message], message });
     throw new Error(message);
@@ -583,7 +575,7 @@ dt.post("/login-workflow", async (c) => {
   const env = c.env as Env;
   const loginSession = await createLoginSession(env, u.id);
   try {
-    const payload = await triggerGitHubLogin(env, loginSession.id, u.id);
+    const payload = await dispatchWorkflow(env, { login_session_id: loginSession.id });
     return c.json({ ok: true, message: "已启动远程登录，请等待二维码。", login_session: loginSession, ...payload });
   } catch (error) {
     await completeLoginSession(env, loginSession.id, { error: error instanceof Error ? error.message : "failed to start login workflow" });

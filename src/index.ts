@@ -8,8 +8,7 @@ interface Env {
   DB: D1Database; ASSETS?: { fetch: (req: Request) => Promise<Response> };
   RESEND_KEY?: string; SENDER_DOMAIN?: string;
   INTERNAL_API_TOKEN?: string; GITHUB_ACTIONS_TOKEN?: string;
-  GITHUB_REPOSITORY?: string; GITHUB_WORKFLOW_FILE?: string;
-  GITHUB_LOGIN_WORKFLOW_FILE?: string; GITHUB_REF?: string;
+  GITHUB_REPOSITORY?: string; GITHUB_WORKFLOW_FILE?: string; GITHUB_REF?: string;
 }
 interface Session { id: string; created_at: string; }
 
